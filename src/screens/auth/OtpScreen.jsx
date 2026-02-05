@@ -1,69 +1,3 @@
-// import React, { useState } from 'react';
-// import { View, TextInput } from 'react-native';
-// import AppSafeArea from '../../components/common/AppSafeArea';
-// import AppView from '../../components/common/AppView';
-// import AppText from '../../components/common/AppText';
-// import { useTheme } from '../../hooks/useTheme';
-// import AppButton from '../../components/common/AppButton';
-
-// export default function OtpScreen({ route, navigation }) {
-//   const { theme } = useTheme();
-//   const { mobile } = route.params;
-//   const [otp, setOtp] = useState('');
-
-//   const handleVerify = () => {
-//     // TEMP: no API
-//     navigation.replace('Home');
-//   };
-
-//   return (
-//     <AppSafeArea style={{ padding: theme.spacing.lg }}>
-//       <AppText variant="title" style={{ marginBottom: 8 }}>
-//         Enter OTP
-//       </AppText>
-
-//       <AppText style={{ opacity: 0.7, marginBottom: 20 }}>
-//         Sent to {mobile}
-//       </AppText>
-
-//       <AppView style={{ flexDirection: 'row', gap: 10, marginBottom: 30 }}>
-//         {[...Array(6)].map((_, i) => (
-//           <View
-//             key={i}
-//             style={{
-//               width: 45,
-//               height: 50,
-//               borderRadius: 8,
-//               borderWidth: 1,
-//               borderColor: theme.colors.border,
-//               justifyContent: 'center',
-//               alignItems: 'center',
-//             }}
-//           >
-//             <AppText>{otp[i] || ''}</AppText>
-//           </View>
-//         ))}
-//       </AppView>
-
-//       <TextInput
-//         keyboardType="number-pad"
-//         maxLength={6}
-//         value={otp}
-//         onChangeText={setOtp}
-//         style={{ height: 0 }} // hidden input
-//       />
-
-//       <AppButton title="Verify & Login →" onPress={handleVerify} />
-
-//       <AppText
-//         style={{ marginTop: 20, textAlign: 'center', opacity: 0.7 }}
-//         onPress={() => navigation.goBack()}
-//       >
-//         Change number
-//       </AppText>
-//     </AppSafeArea>
-//   );
-// }
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
@@ -78,21 +12,21 @@ import AppSafeArea from '../../components/common/AppSafeArea';
 import AppText from '../../components/common/AppText';
 import AppButton from '../../components/common/AppButton';
 import AppView from '../../components/common/AppView';
-import { useTheme } from '../../hooks/useTheme';
 
 import LinearGradient from 'react-native-linear-gradient';
+import { colors } from '../../theme/colors';
+import { spacing } from '../../theme/spacing';
 
 export default function OtpScreen({ navigation, route }) {
-  const { theme } = useTheme();
   const { mobile } = route.params;
 
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otp, setOtp] = useState(['', '', '', '']);
   const inputs = useRef([]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const logo =
-    theme.mode === 'dark'
-      ? require('../../assets/images/light-logo.png')
-      : require('../../assets/images/dark-logo.png');
+
+  // Dark-only logo
+  const logo = require('../../assets/images/light-logo.png');
+
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -107,34 +41,37 @@ export default function OtpScreen({ navigation, route }) {
       newOtp[index] = value;
       setOtp(newOtp);
 
-      if (value && index < 5) {
+      if (value && index < 3) {
         inputs.current[index + 1].focus();
       }
     }
   };
 
   const handleVerify = () => {
-    // dummy success
+    const enteredOtp = otp.join('');
+
+    if (enteredOtp.length !== 4) {
+      return;
+    }
+
     navigation.reset({
       index: 0,
-      routes: [{ name: 'Drawer' }],
+      routes: [{ name: 'Register' }],
     });
   };
 
   return (
-    <AppSafeArea style={{ padding: theme.spacing.lg }}>
+    <AppSafeArea style={{ padding: spacing.lg }}>
       {/* Logo Section */}
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
         <Image source={logo} style={styles.logo} resizeMode="contain" />
-
-        {/* <LinearGradient
+        <LinearGradient
           colors={['#000000', '#FFFFFF', '#FFFFFF', '#000000']}
           locations={[0, 0.25, 0.5, 1]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.divider}
-        /> */}
-
+        />
         <AppText style={styles.subtitle}>B2B Voice Ordering Platform</AppText>
       </Animated.View>
 
@@ -142,14 +79,12 @@ export default function OtpScreen({ navigation, route }) {
       <AppView
         style={{
           borderWidth: 1,
-          borderColor: theme.colors.border,
+          borderColor: colors.border,
           borderRadius: 14,
-          padding: theme.spacing.lg,
+          padding: spacing.lg,
         }}
       >
-        <AppText variant="title" style={styles.title}>
-          Enter OTP
-        </AppText>
+        <AppText style={styles.title}>Enter OTP</AppText>
 
         <AppText style={styles.sentText}>Sent to {mobile}</AppText>
 
@@ -165,7 +100,10 @@ export default function OtpScreen({ navigation, route }) {
               maxLength={1}
               style={[
                 styles.otpBox,
-                { borderColor: theme.colors.border, color: theme.colors.text },
+                {
+                  borderColor: colors.border,
+                  color: colors.textPrimary,
+                },
               ]}
             />
           ))}
@@ -184,7 +122,6 @@ export default function OtpScreen({ navigation, route }) {
     </AppSafeArea>
   );
 }
-
 const styles = StyleSheet.create({
   content: {
     flex: 1,
@@ -196,13 +133,6 @@ const styles = StyleSheet.create({
     width: 300,
     height: 90,
     marginBottom: 12,
-  },
-
-  divider: {
-    width: 160,
-    height: 1,
-    marginBottom: 12,
-    opacity: 0.9,
   },
 
   subtitle: {
@@ -237,7 +167,6 @@ const styles = StyleSheet.create({
   },
 
   button: {
-    // marginBottom: 12,
     fontSize: 16,
   },
 
@@ -246,5 +175,12 @@ const styles = StyleSheet.create({
     opacity: 0.8,
     fontSize: 16,
     marginVertical: 10,
+  },
+  divider: {
+    width: 160,
+    height: 1,
+    marginBottom: 12,
+    opacity: 0.9,
+    transform: [{ scaleX: 0.85 }],
   },
 });

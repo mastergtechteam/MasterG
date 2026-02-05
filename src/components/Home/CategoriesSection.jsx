@@ -1,41 +1,39 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FlatList, StyleSheet } from 'react-native';
 import AppView from '../common/AppView';
 import SectionHeader from './SectionHeader';
 import CategorieCard from './CategorieCard';
+
+const API_URL =
+  'https://gvtceeegs3.execute-api.ap-south-1.amazonaws.com/categories'; // 👈 replace this
+
 const CategoriesSection = () => {
-  const smartDeals = [
-    {
-      id: '1',
-      title: 'Grocery Essentials',
-      image: require('../../assets/images/store.jpg'),
-    },
-    {
-      id: '2',
-      title: 'Snacks & Biscuits',
-      image: require('../../assets/images/store.jpg'),
-    },
-    {
-      id: '3',
-      title: 'Beverages',
-      image: require('../../assets/images/store.jpg'),
-    },
-    {
-      id: '4',
-      title: 'Dairy',
-      image: require('../../assets/images/store.jpg'),
-    },
-    {
-      id: '5',
-      title: 'Household',
-      image: require('../../assets/images/store.jpg'),
-    },
-    {
-      id: '6',
-      title: 'Personal Care',
-      image: require('../../assets/images/store.jpg'),
-    },
-  ];
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch(API_URL);
+      const json = await response.json();
+
+      if (json?.success && Array.isArray(json.data)) {
+        const formattedData = json.data
+          .filter(item => item.status === 'ACTIVE' && !item.isDeleted)
+          .map(item => ({
+            id: item.categoryId,
+            title: item.name,
+            image: { uri: item.image },
+          }));
+
+        setCategories(formattedData);
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
   return (
     <AppView>
       <SectionHeader
@@ -47,7 +45,7 @@ const CategoriesSection = () => {
       />
 
       <FlatList
-        data={smartDeals}
+        data={categories.slice(0, 6)}
         numColumns={2}
         keyExtractor={item => item.id}
         columnWrapperStyle={{

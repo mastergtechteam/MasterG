@@ -10,11 +10,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
-import { useTheme } from '../hooks/useTheme';
 
 const SplashScreen = () => {
   const navigation = useNavigation();
-  const { theme } = useTheme();
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const logo = require('../assets/images/light-logo.png');
@@ -26,12 +25,12 @@ const SplashScreen = () => {
       useNativeDriver: true,
     }).start();
 
-    // const timer = setTimeout(() => {
-    //   navigation.navigate('Auth');
-    // }, 5000);
     const timer = setTimeout(() => {
-      navigation.navigate('Drawer');
+      navigation.navigate('Auth');
     }, 5000);
+    // const timer = setTimeout(() => {
+    //   navigation.replace('App');
+    // }, 5000);
     return () => clearTimeout(timer);
   }, []);
 

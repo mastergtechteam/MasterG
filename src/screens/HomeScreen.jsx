@@ -481,8 +481,16 @@ import AlertStrip from '../components/Home/AlertStrip';
 import DealsList from '../components/Home/DealsList';
 import InsightCard from '../components/Home/InsightCard';
 import CategoriesSection from '../components/Home/CategoriesSection';
+import { useNavigation } from '@react-navigation/native';
 
 const HomeScreen = () => {
+  const navigation = useNavigation();
+  const handleSpeakOrder = () => {
+    navigation.navigate('Mic');
+  };
+  const handleQuickBuy = () => {
+    navigation.navigate('Mic');
+  };
   return (
     <AppSafeArea>
       <FlatList
@@ -507,7 +515,7 @@ const HomeScreen = () => {
                 icon="mic"
                 title="Speak & Order"
                 subtitle="Order in seconds using voice"
-                onPress={() => console.log('Voice pressed')}
+                onPress={handleSpeakOrder}
               />
 
               <ActionCard
@@ -515,6 +523,7 @@ const HomeScreen = () => {
                 title="Quick Buy"
                 subtitle="Buy frequently ordered items"
                 iconBgColor="#143620"
+                onPress={handleSpeakOrder}
               />
             </View>
 

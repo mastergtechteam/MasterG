@@ -1,35 +1,3 @@
-// import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-// import React from 'react';
-// import { useNavigation } from '@react-navigation/native';
-// import AppSafeArea from '../../components/common/AppSafeArea';
-// import AppView from '../../components/common/AppView';
-// import AppText from '../../components/common/AppText';
-// import AppButton from '../../components/common/AppButton';
-
-// const LoginScreen = () => {
-//   const navigation = useNavigation();
-//   return (
-//     <AppSafeArea>
-//       <AppView
-//         style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
-//       >
-//         <AppText style={{ fontSize: 24, marginBottom: 20 }}>
-//           Login Screen
-//         </AppText>
-//         <AppButton
-//           title="Go to Home"
-//           onPress={() => navigation.navigate('Home')}
-//         >
-//           <AppText style={{ color: '#fff' }}>Go to Home</AppText>
-//         </AppButton>
-//       </AppView>
-//     </AppSafeArea>
-//   );
-// };
-
-// export default LoginScreen;
-
-// const styles = StyleSheet.create({});
 import React, { useRef, useState, useEffect } from 'react';
 import {
   TextInput,
@@ -44,18 +12,17 @@ import AppSafeArea from '../../components/common/AppSafeArea';
 import AppText from '../../components/common/AppText';
 import AppButton from '../../components/common/AppButton';
 import AppView from '../../components/common/AppView';
-import { useTheme } from '../../hooks/useTheme';
 
 import LinearGradient from 'react-native-linear-gradient';
+import { colors } from '../../theme/colors';
+import { spacing } from '../../theme/spacing';
 
 export default function LoginScreen({ navigation }) {
-  const { theme } = useTheme();
   const [mobile, setMobile] = useState('');
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const logo =
-    theme.mode === 'dark'
-      ? require('../../assets/images/light-logo.png')
-      : require('../../assets/images/dark-logo.png');
+
+  // Dark-only logo
+  const logo = require('../../assets/images/light-logo.png');
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -79,62 +46,60 @@ export default function LoginScreen({ navigation }) {
   };
 
   return (
-    <AppSafeArea style={{ padding: theme.spacing.lg }}>
+    <AppSafeArea style={{ padding: spacing.lg }}>
       {/* Logo Section */}
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
         <Image source={logo} style={styles.logo} resizeMode="contain" />
-
-        {/* <LinearGradient
+        <LinearGradient
           colors={['#000000', '#FFFFFF', '#FFFFFF', '#000000']}
           locations={[0, 0.25, 0.5, 1]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.divider}
-        /> */}
-
-        <AppText style={[styles.subtitle]}>B2B Voice Ordering Platform</AppText>
+        />
+        <AppText style={styles.subtitle}>B2B Voice Ordering Platform</AppText>
       </Animated.View>
 
       {/* Login Card */}
       <AppView
         style={{
           borderWidth: 1,
-          borderColor: theme.colors.border,
+          borderColor: colors.border,
           borderRadius: 14,
-          padding: theme.spacing.lg,
-          marginBottom: theme.spacing.lg,
+          padding: spacing.lg,
+          marginBottom: spacing.lg,
         }}
       >
-        <AppText variant="title" style={styles.title}>
-          Login With Mobile
-        </AppText>
+        <AppText style={styles.title}>Login With Mobile</AppText>
 
-        <AppView
-          style={[styles.inputRow, { borderColor: theme.colors.border }]}
-        >
+        <AppView style={[styles.inputRow, { borderColor: colors.border }]}>
           <AppText style={styles.countryCode}>+91</AppText>
 
           <TextInput
             placeholder="Enter mobile number"
-            placeholderTextColor={theme.colors.gray500}
+            placeholderTextColor={colors.textMuted}
             keyboardType="number-pad"
             maxLength={10}
             value={mobile}
             onChangeText={setMobile}
-            style={[styles.input, { color: theme.colors.text }]}
+            style={[styles.input, { color: colors.textPrimary }]}
           />
         </AppView>
 
         <AppButton
-          title="Get OTP "
+          title="Get OTP"
           onPress={handleGetOtp}
           style={styles.button}
+        />
+        <AppButton
+          title="Skip"
+          onPress={() => navigation.navigate('App')}
+          style={[styles.button]}
         />
       </AppView>
     </AppSafeArea>
   );
 }
-
 const styles = StyleSheet.create({
   content: {
     flex: 1,
@@ -145,15 +110,8 @@ const styles = StyleSheet.create({
   logo: {
     width: 300,
     height: 90,
-    // marginBottom: 12,
   },
 
-  divider: {
-    width: 160,
-    height: 1,
-    marginBottom: 12,
-    opacity: 0.9,
-  },
   title: {
     fontSize: 20,
     marginBottom: 16,
@@ -172,6 +130,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginBottom: 16,
   },
+
   countryCode: {
     fontSize: 16,
     marginRight: 8,
@@ -182,8 +141,16 @@ const styles = StyleSheet.create({
     height: 48,
     fontSize: 16,
   },
+
   button: {
-    // marginTop: 8,
     fontSize: 20,
+    marginBottom: 20,
+  },
+  divider: {
+    width: 160,
+    height: 1,
+    marginBottom: 12,
+    opacity: 0.9,
+    transform: [{ scaleX: 0.85 }],
   },
 });

@@ -17,7 +17,7 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import RootNavigator from './src/navigation/RootNavigator';
-import { ThemeProvider } from './src/context/ThemeContext';
+import { ThemeProvider } from './waste/ThemeContext';
 import { LanguageProvider } from './src/context/LanguageContext';
 
 export default function App() {

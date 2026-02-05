@@ -20,7 +20,7 @@
 // export const useThemeContext = () => useContext(ThemeContext);
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Appearance } from 'react-native';
-import { lightTheme, darkTheme } from '../theme';
+import { lightTheme, darkTheme } from '.';
 
 const ThemeContext = createContext(null);
 

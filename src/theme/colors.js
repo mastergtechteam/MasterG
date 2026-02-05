@@ -1,16 +1,25 @@
 export const colors = {
-  primary: '#4F46E5',
-  secondary: '#22C55E',
+  // Core dark UI
+  background: '#0B0B0B', // app background
+  surface: '#121212', // cards / sheets
+  surfaceElevated: '#1A1A1A', // modals / bottom sheets
+  border: '#262626',
 
-  white: '#FFFFFF',
-  black: '#000000',
+  // Text
+  textPrimary: '#FFFFFF',
+  textSecondary: '#A1A1AA',
+  textMuted: '#71717A',
 
-  gray100: '#F3F4F6',
-  gray300: '#D1D5DB',
-  gray500: '#6B7280',
-  gray900: '#111827',
+  // Brand / actions (green from Figma)
+  primary: '#22C55E',
+  primaryPressed: '#16A34A',
 
-  error: '#EF4444',
+  // Status
+  success: '#22C55E',
   warning: '#F59E0B',
-  success: '#10B981',
+  error: '#EF4444',
+
+  // Utility
+  black: '#000000',
+  white: '#FFFFFF',
 };

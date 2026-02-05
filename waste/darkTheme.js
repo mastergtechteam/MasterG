@@ -1,6 +1,6 @@
-import { colors } from './colors';
-import { spacing } from './spacing';
-import { typography } from './typography';
+import { colors } from '../src/theme/colors';
+import { spacing } from '../src/theme/spacing';
+import { typography } from '../src/theme/typography';
 
 export const darkTheme = {
   mode: 'dark',

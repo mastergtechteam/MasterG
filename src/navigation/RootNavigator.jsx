@@ -2,8 +2,19 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import SplashScreen from '../screens/SplashScreen';
 import AuthNavigator from './AuthNavigator';
-import DrawerNavigator from './DrawerNavigator';
+import AppNavigator from './AppNavigator';
 
+// const Stack = createNativeStackNavigator();
+
+// export default function RootNavigator() {
+//   return (
+//     <Stack.Navigator screenOptions={{ headerShown: false }}>
+//       <Stack.Screen name="Splash" component={SplashScreen} />
+//       <Stack.Screen name="Auth" component={AuthNavigator} />
+//       <Stack.Screen name="Drawer" component={DrawerNavigator} />
+//     </Stack.Navigator>
+//   );
+// }
 const Stack = createNativeStackNavigator();
 
 export default function RootNavigator() {
@@ -11,7 +22,7 @@ export default function RootNavigator() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Splash" component={SplashScreen} />
       <Stack.Screen name="Auth" component={AuthNavigator} />
-      <Stack.Screen name="Drawer" component={DrawerNavigator} />
+      <Stack.Screen name="App" component={AppNavigator} />
     </Stack.Navigator>
   );
 }

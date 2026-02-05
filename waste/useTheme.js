@@ -1,4 +1,4 @@
-import { useThemeContext } from '../context/ThemeContext';
+import { useThemeContext } from '../../waste/ThemeContext';
 
 export const useTheme = () => {
   const { theme, toggleTheme, isDark } = useThemeContext();

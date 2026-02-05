@@ -133,7 +133,14 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import ProfileScreen from '../screens/ProfileScreen';
 import StackNavigator from './StackNavigator';
-
+import VoiceScreen from '../screens/VoiceScreen';
+import InsightsScreen from '../screens/InsightsScreen';
+import PaymentScreen from '../screens/PaymentScreen';
+import OrderScreen from '../screens/OrderScreen';
+import ProductsScreen from '../screens/ProductsScreen';
+import MaterialDesignIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import CartScreen from '../screens/CartScreen';
+import CategoriesScreen from '../screens/CategoriesScreen';
 const Tab = createBottomTabNavigator();
 
 function MicButton({ onPress }) {
@@ -165,7 +172,7 @@ export default function SalesTabNavigator() {
       }}
     >
       <Tab.Screen
-        name="Home"
+        name="HomeTab"
         component={StackNavigator}
         options={{
           tabBarIcon: ({ color, size }) => (
@@ -176,7 +183,7 @@ export default function SalesTabNavigator() {
 
       <Tab.Screen
         name="Insights"
-        component={ProfileScreen}
+        component={InsightsScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="stats-chart-outline" size={size} color={color} />
@@ -187,32 +194,30 @@ export default function SalesTabNavigator() {
       {/* CENTER MIC */}
       <Tab.Screen
         name="Mic"
-        component={View}
+        component={VoiceScreen}
         options={{
           tabBarLabel: '',
           tabBarIcon: () => null,
-          tabBarButton: props => (
-            <MicButton {...props} onPress={() => console.log('Mic pressed')} />
+          tabBarButton: props => <MicButton {...props} />,
+        }}
+      />
+
+      <Tab.Screen
+        name="Categories"
+        component={CategoriesScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="search-outline" size={size} color={color} />
           ),
         }}
       />
 
       <Tab.Screen
-        name="Payment"
-        component={ProfileScreen}
+        name="Cart"
+        component={CartScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="card-outline" size={size} color={color} />
-          ),
-        }}
-      />
-
-      <Tab.Screen
-        name="Order"
-        component={ProfileScreen}
-        options={{
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="receipt-outline" size={size} color={color} />
+            <Ionicons name="cart-outline" size={size} color={color} />
           ),
         }}
       />

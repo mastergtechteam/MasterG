@@ -1,12 +1,25 @@
 import React from 'react';
-import { ImageBackground, StyleSheet } from 'react-native';
+import {
+  ImageBackground,
+  StyleSheet,
+  Pressable,
+  TouchableOpacity,
+} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
 import AppText from '../common/AppText';
 import AppView from '../common/AppView';
+import { colors } from '../../theme/colors';
 
 const CategorieCard = ({ item }) => {
+  const navigation = useNavigation();
+
   return (
-    <AppView style={styles.card}>
+    <TouchableOpacity
+      as={Pressable}
+      style={styles.card}
+      onPress={() => navigation.navigate('Products', { item })}
+    >
       <ImageBackground
         source={item.image}
         style={styles.image}
@@ -17,14 +30,14 @@ const CategorieCard = ({ item }) => {
           locations={[0.35, 1]}
           style={styles.gradient}
         />
-
         <AppText style={styles.title}>{item.title}</AppText>
       </ImageBackground>
-    </AppView>
+    </TouchableOpacity>
   );
 };
 
 export default CategorieCard;
+
 const styles = StyleSheet.create({
   list: {
     paddingHorizontal: 16,
@@ -36,6 +49,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     overflow: 'hidden',
     marginBottom: 14,
+    backgroundColor: colors.background,
   },
 
   image: {

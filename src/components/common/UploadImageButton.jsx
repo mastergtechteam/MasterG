@@ -440,7 +440,7 @@ import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 
 const MAX_IMAGES = 5;
 
-const UploadImageButton = ({ images = [], onChange }) => {
+const UploadImageBtn = ({ images = [], onChange }) => {
   /* =====================
      PERMISSIONS
   ====================== */
@@ -538,7 +538,7 @@ const UploadImageButton = ({ images = [], onChange }) => {
   );
 };
 
-export default UploadImageButton;
+export default UploadImageBtn;
 
 const styles = StyleSheet.create({
   wrapper: { marginTop: 20 },
@@ -546,6 +546,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'center',
+    borderWidth: 2,
+    borderColor: '#1E7CFF',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
   },
   uploadText: {
     color: '#1E7CFF',
