@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet } from 'react-native';
-import DrawerButton from '../components/common/DrawerButton';
+import DrawerButton from '../../components/common/DrawerButton';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SettingsScreen() {

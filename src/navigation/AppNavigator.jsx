@@ -1,9 +1,8 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import DrawerNavigator from './DrawerNavigator';
-import ProfileScreen from '../screens/ProfileScreen';
-import ProductsScreen from '../screens/ProductsScreen';
-import DetailsScreen from '../screens/DetailsScreen';
-import CategoriesScreen from '../screens/CategoriesScreen';
+import ProfileScreen from '../screens/Profile/ProfileScreen';
+import ProductsScreen from '../screens/Product/ProductsScreen';
+import CategoriesScreen from '../screens/Categories/CategoriesScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -15,7 +14,6 @@ export default function AppNavigator() {
       {/* 🔥 GLOBAL SCREENS */}
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="Products" component={ProductsScreen} />
-      <Stack.Screen name="Details" component={DetailsScreen} />
       <Stack.Screen name="Categories" component={CategoriesScreen} />
     </Stack.Navigator>
   );

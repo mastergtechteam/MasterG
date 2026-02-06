@@ -1,9 +1,9 @@
 import React from 'react';
 import { FlatList, StyleSheet, TouchableOpacity } from 'react-native';
-import AppSafeArea from '../components/common/AppSafeArea';
-import AppView from '../components/common/AppView';
-import AppText from '../components/common/AppText';
-import Header from '../components/common/Header';
+import AppSafeArea from '../../components/common/AppSafeArea';
+import AppView from '../../components/common/AppView';
+import AppText from '../../components/common/AppText';
+import Header from '../../components/common/Header';
 
 const orders = [
   {

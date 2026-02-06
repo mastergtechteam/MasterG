@@ -1,11 +1,11 @@
 import React from 'react';
 import { FlatList, Image, StyleSheet, TouchableOpacity } from 'react-native';
-import AppSafeArea from '../components/common/AppSafeArea';
-import AppView from '../components/common/AppView';
-import AppText from '../components/common/AppText';
-import AppButton from '../components/common/AppButton';
+import AppSafeArea from '../../components/common/AppSafeArea';
+import AppView from '../../components/common/AppView';
+import AppText from '../../components/common/AppText';
+import AppButton from '../../components/common/AppButton';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import Header from '../components/common/Header';
+import Header from '../../components/common/Header';
 
 const orders = [
   {
@@ -14,7 +14,7 @@ const orders = [
     items: 12,
     amount: '₹9,897',
     status: 'Delivered',
-    image: require('../assets/images/store.jpg'),
+    image: require('../../assets/images/store.jpg'),
   },
   {
     id: 'ORD-002',
@@ -22,7 +22,7 @@ const orders = [
     items: 8,
     amount: '₹2,897',
     status: 'Delivered',
-    image: require('../assets/images/store.jpg'),
+    image: require('../../assets/images/store.jpg'),
   },
   {
     id: 'ORD-003',
@@ -30,7 +30,7 @@ const orders = [
     items: 8,
     amount: '₹2,897',
     status: 'Delivered',
-    image: require('../assets/images/store.jpg'),
+    image: require('../../assets/images/store.jpg'),
   },
   {
     id: 'ORD-004',
@@ -38,7 +38,7 @@ const orders = [
     items: 8,
     amount: '₹2,897',
     status: 'Delivered',
-    image: require('../assets/images/store.jpg'),
+    image: require('../../assets/images/store.jpg'),
   },
 ];
 

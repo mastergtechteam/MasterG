@@ -16,7 +16,7 @@ const SplashScreen = () => {
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  const logo = require('../assets/images/light-logo.png');
+  const logo = require('../../assets/images/light-logo.png');
 
   useEffect(() => {
     Animated.timing(fadeAnim, {

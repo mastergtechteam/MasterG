@@ -1,10 +1,10 @@
 import React from 'react';
 import { StyleSheet, FlatList } from 'react-native';
-import AppSafeArea from '../components/common/AppSafeArea';
-import AppView from '../components/common/AppView';
-import AppText from '../components/common/AppText';
+import AppSafeArea from '../../components/common/AppSafeArea';
+import AppView from '../../components/common/AppView';
+import AppText from '../../components/common/AppText';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import Header from '../components/common/Header';
+import Header from '../../components/common/Header';
 
 const stats = [
   {

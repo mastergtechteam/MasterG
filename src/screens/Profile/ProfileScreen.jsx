@@ -10,12 +10,12 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
 
-import AppSafeArea from '../components/common/AppSafeArea';
-import AppView from '../components/common/AppView';
-import AppText from '../components/common/AppText';
-import Header from '../components/common/Header';
-import { colors } from '../theme/colors';
-import { spacing } from '../theme/spacing';
+import AppSafeArea from '../../components/common/AppSafeArea';
+import AppView from '../../components/common/AppView';
+import AppText from '../../components/common/AppText';
+import Header from '../../components/common/Header';
+import { colors } from '../../theme/colors';
+import { spacing } from '../../theme/spacing';
 
 const STATIC_RETAILER = {
   retailerId: 'RET1003',

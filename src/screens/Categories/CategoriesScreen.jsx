@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Header from '../components/common/Header';
-import AppView from '../components/common/AppView';
-import SectionHeader from '../components/Home/SectionHeader';
-import CategorieCard from '../components/Home/CategorieCard';
+import Header from '../../components/common/Header';
+import AppView from '../../components/common/AppView';
+import CategorieCard from '../../components/Home/CategorieCard';
 import { FlatList } from 'react-native';
-import { colors } from '../theme/colors';
+import { colors } from '../../theme/colors';
 
 const API_URL =
   'https://gvtceeegs3.execute-api.ap-south-1.amazonaws.com/categories'; // 👈 replace this

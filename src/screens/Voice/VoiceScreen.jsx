@@ -15,7 +15,7 @@ import {
   stopListening,
 } from '@ascendtis/react-native-voice-to-text';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Header from '../components/common/Header';
+import Header from '../../components/common/Header';
 import { useNavigation } from '@react-navigation/native';
 
 const VoiceScreen = () => {
