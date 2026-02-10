@@ -42,5 +42,16 @@ export const selectCartTotal = createSelector([selectCartItems], items =>
 /**
  * Factory selector for ProductCard
  */
-export const selectCartItemById = id =>
-  createSelector([selectCartItems], items => items[id]);
+// export const selectCartItemById = id =>
+//   createSelector([selectCartItems], items => items[id]);
+const cartItemSelectors = {};
+
+export const selectCartItemById = id => {
+  if (!cartItemSelectors[id]) {
+    cartItemSelectors[id] = createSelector(
+      [selectCartItems],
+      items => items[id],
+    );
+  }
+  return cartItemSelectors[id];
+};

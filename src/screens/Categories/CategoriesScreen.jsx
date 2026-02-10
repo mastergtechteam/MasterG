@@ -8,7 +8,7 @@ import { FlatList } from 'react-native';
 import { colors } from '../../theme/colors';
 
 const API_URL =
-  'https://gvtceeegs3.execute-api.ap-south-1.amazonaws.com/categories'; // 👈 replace this
+  'https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com/categories'; // 👈 replace this
 
 const CategoriesScreen = () => {
   const [categories, setCategories] = useState([]);

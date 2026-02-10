@@ -7,6 +7,7 @@ import VoiceScreen from '../screens/Voice/VoiceScreen';
 import InsightsScreen from '../screens/Insights/InsightsScreen';
 import CartScreen from '../screens/Cart/CartScreen';
 import CategoriesScreen from '../screens/Categories/CategoriesScreen';
+import OrdersScreen from '../screens/Order/OrderScreen';
 const Tab = createBottomTabNavigator();
 
 function MicButton({ onPress }) {
@@ -69,8 +70,8 @@ export default function SalesTabNavigator() {
       />
 
       <Tab.Screen
-        name="Categories"
-        component={CategoriesScreen}
+        name="Orders"
+        component={OrdersScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="search-outline" size={size} color={color} />

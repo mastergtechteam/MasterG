@@ -13,6 +13,7 @@ import { colors } from '../../theme/colors';
 
 const CategorieCard = ({ item }) => {
   const navigation = useNavigation();
+  // console.log(item);
 
   return (
     <TouchableOpacity

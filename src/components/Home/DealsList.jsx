@@ -2,8 +2,10 @@ import React from 'react';
 import { FlatList, View } from 'react-native';
 import DealCard from './DealCard';
 import SectionHeader from './SectionHeader';
+import { useNavigation } from '@react-navigation/native';
 
 const DealsList = () => {
+  const navigation = useNavigation();
   const DEALS = [
     {
       id: '1',
@@ -30,7 +32,7 @@ const DealsList = () => {
       <SectionHeader
         title="Smart Deals for Retailers"
         leftIcon="flame"
-        onPressViewAll={() => console.log('View All Deals')}
+        onPressViewAll={() => navigation.navigate('Deals')}
       />
 
       <View style={{ paddingLeft: 16, marginBottom: 20 }}>

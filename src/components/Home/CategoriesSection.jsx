@@ -3,12 +3,14 @@ import { FlatList, StyleSheet } from 'react-native';
 import AppView from '../common/AppView';
 import SectionHeader from './SectionHeader';
 import CategorieCard from './CategorieCard';
+import { useNavigation } from '@react-navigation/native';
 
 const API_URL =
-  'https://gvtceeegs3.execute-api.ap-south-1.amazonaws.com/categories'; // 👈 replace this
+  'https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com/categories'; // 👈 replace this
 
 const CategoriesSection = () => {
   const [categories, setCategories] = useState([]);
+  const navigation = useNavigation();
 
   useEffect(() => {
     fetchCategories();
@@ -40,7 +42,7 @@ const CategoriesSection = () => {
         title="Categories"
         leftIcon="flame"
         onPressViewAll={() => {
-          console.log('View All Pressed');
+          navigation.navigate('Categories');
         }}
       />
 

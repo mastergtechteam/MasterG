@@ -23,7 +23,7 @@ import GetLocationButton from '../../components/common/GetLocationButton';
 import UploadImageBtn from '../../components/common/UploadImageButton';
 
 const API_URL =
-  'https://gvtceeegs3.execute-api.ap-south-1.amazonaws.com/retailers';
+  'https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com/retailers';
 
 /* =====================
    HELPERS
