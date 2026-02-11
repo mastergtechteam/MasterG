@@ -5,6 +5,9 @@ import ProductsScreen from '../screens/Product/ProductsScreen';
 import CategoriesScreen from '../screens/Categories/CategoriesScreen';
 import DealsScreen from '../screens/Deals/DealsScreen';
 import ProductsDetailsScreen from '../screens/Product/ProductsDetailsScreen';
+import DealProductsScreen from '../screens/Deals/DealProductsScreen';
+import CartScreen from '../screens/Cart/CartScreen';
+import SearchScreen from '../screens/search/SearchScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -19,6 +22,9 @@ export default function AppNavigator() {
       <Stack.Screen name="Product-Details" component={ProductsDetailsScreen} />
       <Stack.Screen name="Categories" component={CategoriesScreen} />
       <Stack.Screen name="Deals" component={DealsScreen} />
+      <Stack.Screen name="DealProducts" component={DealProductsScreen} />
+      <Stack.Screen name="Cart" component={CartScreen} />
+      <Stack.Screen name="Search" component={SearchScreen} />
     </Stack.Navigator>
   );
 }

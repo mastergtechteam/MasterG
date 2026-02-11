@@ -40,7 +40,10 @@ const ProductCard = ({ item }) => {
   return (
     <TouchableOpacity style={styles.productCard} onPress={handleDetails}>
       <View style={styles.imageBadgeContainer}>
-        <Image source={{ uri: item.image }} style={styles.productImage} />
+        <Image
+          source={{ uri: item.image || item.images[0] }}
+          style={styles.productImage}
+        />
       </View>
 
       <View style={styles.productInfo}>

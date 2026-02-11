@@ -6,7 +6,7 @@ import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 
-const GoBackHeader = ({ title = 'Back', onSearchPress }) => {
+const GoBackHeader = ({ title = 'Back' }) => {
   const navigation = useNavigation();
 
   const handleBackPress = () => {
@@ -14,11 +14,7 @@ const GoBackHeader = ({ title = 'Back', onSearchPress }) => {
   };
 
   const handleSearchPress = () => {
-    if (onSearchPress) {
-      onSearchPress();
-    } else {
-      Alert.alert('Search', 'Search functionality triggered');
-    }
+    navigation.navigate('Search');
   };
 
   return (

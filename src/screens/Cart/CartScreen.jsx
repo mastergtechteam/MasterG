@@ -11,6 +11,7 @@ import {
   Pressable,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
 import MaterialDesignIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,6 +21,7 @@ import {
   incrementQuantity,
   decrementQuantity,
   removeItem,
+  clearCart,
 } from '../../features/cart/cartSlice';
 
 import {
@@ -33,6 +35,7 @@ import { typography } from '../../theme/typography';
 
 const CartScreen = () => {
   const dispatch = useDispatch();
+  const navigation = useNavigation();
   const [modalVisible, setModalVisible] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
@@ -68,18 +71,93 @@ const CartScreen = () => {
     zipCode: '400 001',
   };
 
-  const handlePaymentMethod = method => {
-    if (method === 'COD') {
-      setModalVisible(false);
-      setOrderPlaced(true);
-      Alert.alert('Order Placed', 'Your order has been placed successfully!');
-      setTimeout(() => {
-        setOrderPlaced(false);
-      }, 2000);
-    } else {
-      Alert.alert(`${method} Payment`, `${method} payment processing...`);
+  // const handlePaymentMethod = method => {
+  //   if (method === 'COD') {
+  //     setModalVisible(false);
+  //     setOrderPlaced(true);
+  //     Alert.alert('Order Placed', 'Your order has been placed successfully!');
+  //     setTimeout(() => {
+  //       setOrderPlaced(false);
+  //     }, 2000);
+  //   } else {
+  //     Alert.alert(`${method} Payment`, `${method} payment processing...`);
+  //   }
+  // };
+
+  const handlePaymentMethod = async method => {
+    const orderPayload = {
+      retailerId: 'RET00001', // ✅ hardcoded
+
+      items: cartItems.map(({ product, quantity }) => ({
+        productId: product.id,
+        productName: product.name,
+        quantity: quantity,
+        unit: product.unit || 'UNIT', // fallback if unit not present
+        price: product.discountedPrice,
+      })),
+
+      billing: {
+        deliveryCharge: SHIPPING_CHARGE,
+        discount: 0, // you can change later
+        tax: taxAmount,
+      },
+
+      payment: {
+        mode: method, // COD / UPI / Card
+      },
+
+      delivery: {
+        type: 'HOME_DELIVERY',
+        expectedDeliveryTime: new Date(
+          Date.now() + 3 * 24 * 60 * 60 * 1000,
+        ).toISOString(), // +3 days
+      },
+    };
+
+    // ✅ Console original object
+    console.log('ORDER PAYLOAD:', orderPayload);
+
+    try {
+      const response = await fetch(
+        'https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com/api/v1/order',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(orderPayload),
+        },
+      );
+
+      const text = await response.text(); // safer than response.json()
+
+      let data;
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (e) {
+        data = {};
+      }
+
+      console.log('STATUS:', response.status);
+      console.log('API RESPONSE:', data);
+
+      if (response.status >= 200 && response.status < 300) {
+        dispatch(clearCart()); // empty cart
+        setModalVisible(false);
+
+        Alert.alert('Success', 'Order placed successfully!');
+      } else {
+        Alert.alert(
+          'Order Failed',
+          data?.message || `Server error (${response.status})`,
+        );
+      }
+    } catch (error) {
+      console.log('ORDER ERROR:', error);
+      Alert.alert('Network Error', 'Please check your internet connection.');
     }
   };
+
   const ExpandableSection = ({ title, icon, section, children }) => {
     const isExpanded = expandedSections[section];
 
@@ -109,130 +187,165 @@ const CartScreen = () => {
     <SafeAreaView style={styles.container}>
       <Header />
 
-      <ScrollView style={styles.scrollView}>
-        <View style={styles.itemsContainer}>
-          {cartItems.map(({ product, quantity }) => (
-            <View key={product.id} style={styles.cartItem}>
-              <Image
-                source={{ uri: product.image }}
-                style={styles.productImage}
-              />
+      {cartItems.length === 0 ? (
+        // Empty Cart State
+        <View style={styles.emptyCartContainer}>
+          <View style={styles.emptyCartIconBox}>
+            <MaterialDesignIcons
+              name="cart-off"
+              size={80}
+              color={colors.primary}
+            />
+          </View>
+          <Text style={styles.emptyCartTitle}>Your Cart is Empty</Text>
+          <Text style={styles.emptyCartSubtitle}>
+            Looks like you haven't added any items yet
+          </Text>
 
-              <View style={styles.itemDetails}>
-                <Text style={styles.productName}>{product.name}</Text>
-                <Text style={styles.description}>{product.weight}</Text>
-                <Text style={styles.price}>₹{product.discountedPrice}</Text>
-              </View>
-
-              <View style={styles.quantityControl}>
-                <TouchableOpacity
-                  onPress={() => dispatch(decrementQuantity(product.id))}
-                >
-                  <Text style={styles.quantityText}>−</Text>
-                </TouchableOpacity>
-
-                <Text style={styles.quantityValue}>{quantity}</Text>
-
-                <TouchableOpacity
-                  onPress={() => dispatch(incrementQuantity(product.id))}
-                >
-                  <Text style={styles.quantityText}>+</Text>
-                </TouchableOpacity>
-              </View>
-
-              <TouchableOpacity
-                onPress={() => dispatch(removeItem(product.id))}
-                style={styles.deleteBtn}
-              >
-                <MaterialDesignIcons
-                  name="delete-outline"
-                  style={styles.deleteIcon}
-                />
-              </TouchableOpacity>
-            </View>
-          ))}
+          <TouchableOpacity
+            style={styles.browseBtn}
+            onPress={() => navigation.navigate('Categories')}
+          >
+            <MaterialDesignIcons
+              name="shopping-outline"
+              size={20}
+              color={colors.white}
+              style={styles.browseBtnIcon}
+            />
+            <Text style={styles.browseBtnText}>Browse Categories</Text>
+          </TouchableOpacity>
         </View>
+      ) : (
+        // Cart with Items
+        <ScrollView style={styles.scrollView}>
+          <View style={styles.itemsContainer}>
+            {cartItems.map(({ product, quantity }) => (
+              <View key={product.id} style={styles.cartItem}>
+                <Image
+                  source={{ uri: product.image }}
+                  style={styles.productImage}
+                />
 
-        {/* Billing Details */}
-        <ExpandableSection
-          title="Billing Address"
-          section="billing"
-          icon={
-            <MaterialDesignIcons
-              name="map-marker"
-              size={20}
-              color={colors.primary}
-            />
-          }
-        >
-          <View style={styles.billingDetails}>
-            <Text style={styles.billingName}>{billingAddress.name}</Text>
-            <Text style={styles.billingText}>{billingAddress.phone}</Text>
-            <Text style={styles.billingText}>{billingAddress.email}</Text>
-            <Text style={styles.billingAddress}>{billingAddress.address}</Text>
-            <Text style={styles.billingAddress}>{billingAddress.city}</Text>
-            <Text style={styles.billingZip}>{billingAddress.zipCode}</Text>
-          </View>
-        </ExpandableSection>
+                <View style={styles.itemDetails}>
+                  <Text style={styles.productName}>{product.name}</Text>
+                  <Text style={styles.description}>{product.weight}</Text>
+                  <Text style={styles.price}>₹{product.discountedPrice}</Text>
+                </View>
 
-        {/* Delivery Time */}
-        <ExpandableSection
-          title="Estimated Delivery"
-          section="delivery"
-          icon={
-            <MaterialDesignIcons
-              name="truck-delivery"
-              size={20}
-              color={colors.primary}
-            />
-          }
-        >
-          <Text style={styles.deliveryTime}>{DELIVERY_TIME}</Text>
-        </ExpandableSection>
+                <View style={styles.quantityControl}>
+                  <TouchableOpacity
+                    onPress={() => dispatch(decrementQuantity(product.id))}
+                  >
+                    <Text style={styles.quantityText}>−</Text>
+                  </TouchableOpacity>
 
-        {/* Bill Summary */}
-        <ExpandableSection
-          title="Bill Summary"
-          section="summary"
-          icon={
-            <MaterialDesignIcons
-              name="receipt"
-              size={20}
-              color={colors.primary}
-            />
-          }
-        >
-          <View style={styles.summaryItem}>
-            <Text style={styles.itemName}>Subtotal</Text>
-            <Text style={styles.itemPrice}>₹{total}</Text>
+                  <Text style={styles.quantityValue}>{quantity}</Text>
+
+                  <TouchableOpacity
+                    onPress={() => dispatch(incrementQuantity(product.id))}
+                  >
+                    <Text style={styles.quantityText}>+</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <TouchableOpacity
+                  onPress={() => dispatch(removeItem(product.id))}
+                  style={styles.deleteBtn}
+                >
+                  <MaterialDesignIcons
+                    name="delete-outline"
+                    style={styles.deleteIcon}
+                  />
+                </TouchableOpacity>
+              </View>
+            ))}
           </View>
 
-          <View style={styles.summaryItem}>
-            <Text style={styles.itemName}>Shipping</Text>
-            <Text style={styles.itemPrice}>₹{SHIPPING_CHARGE}</Text>
-          </View>
+          {/* Billing Details */}
+          <ExpandableSection
+            title="Billing Address"
+            section="billing"
+            icon={
+              <MaterialDesignIcons
+                name="map-marker"
+                size={20}
+                color={colors.primary}
+              />
+            }
+          >
+            <View style={styles.billingDetails}>
+              <Text style={styles.billingName}>{billingAddress.name}</Text>
+              <Text style={styles.billingText}>{billingAddress.phone}</Text>
+              <Text style={styles.billingText}>{billingAddress.email}</Text>
+              <Text style={styles.billingAddress}>
+                {billingAddress.address}
+              </Text>
+              <Text style={styles.billingAddress}>{billingAddress.city}</Text>
+              <Text style={styles.billingZip}>{billingAddress.zipCode}</Text>
+            </View>
+          </ExpandableSection>
 
-          <View style={styles.summaryItem}>
-            <Text style={styles.itemName}>Tax (5%)</Text>
-            <Text style={styles.itemPrice}>₹{taxAmount}</Text>
-          </View>
+          {/* Delivery Time */}
+          <ExpandableSection
+            title="Estimated Delivery"
+            section="delivery"
+            icon={
+              <MaterialDesignIcons
+                name="truck-delivery"
+                size={20}
+                color={colors.primary}
+              />
+            }
+          >
+            <Text style={styles.deliveryTime}>{DELIVERY_TIME}</Text>
+          </ExpandableSection>
 
-          <View style={styles.separator} />
+          {/* Bill Summary */}
+          <ExpandableSection
+            title="Bill Summary"
+            section="summary"
+            icon={
+              <MaterialDesignIcons
+                name="receipt"
+                size={20}
+                color={colors.primary}
+              />
+            }
+          >
+            <View style={styles.summaryItem}>
+              <Text style={styles.itemName}>Subtotal</Text>
+              <Text style={styles.itemPrice}>₹{total}</Text>
+            </View>
 
-          <View style={styles.totalContainer}>
-            <Text style={styles.totalLabel}>Total Amount</Text>
-            <Text style={styles.totalPrice}>₹{finalTotal}</Text>
-          </View>
-        </ExpandableSection>
+            <View style={styles.summaryItem}>
+              <Text style={styles.itemName}>Shipping</Text>
+              <Text style={styles.itemPrice}>₹{SHIPPING_CHARGE}</Text>
+            </View>
 
-        <TouchableOpacity
-          style={styles.placeOrderBtn}
-          onPress={() => setModalVisible(true)}
-        >
-          <Text style={styles.placeOrderText}>Proceed to pay</Text>
-          <Text style={styles.placeOrderPrice}>₹{finalTotal}</Text>
-        </TouchableOpacity>
-      </ScrollView>
+            <View style={styles.summaryItem}>
+              <Text style={styles.itemName}>Tax (5%)</Text>
+              <Text style={styles.itemPrice}>₹{taxAmount}</Text>
+            </View>
+
+            <View style={styles.separator} />
+
+            <View style={styles.totalContainer}>
+              <Text style={styles.totalLabel}>Total Amount</Text>
+              <Text style={styles.totalPrice}>₹{finalTotal}</Text>
+            </View>
+          </ExpandableSection>
+
+          <TouchableOpacity
+            style={styles.placeOrderBtn}
+            onPress={() => setModalVisible(true)}
+          >
+            <Text style={styles.placeOrderText}>Proceed to pay</Text>
+            <Text style={styles.placeOrderPrice}>₹{finalTotal}</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      )}
+
+      {/* Payment Modal */}
 
       {/* Payment Modal */}
       <Modal
@@ -664,5 +777,49 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSize.md,
     fontWeight: '600',
     color: colors.textPrimary,
+  },
+  // Empty Cart Styles
+  emptyCartContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    backgroundColor: colors.background,
+  },
+  emptyCartIconBox: {
+    marginBottom: spacing.lg,
+    padding: spacing.lg,
+    backgroundColor: colors.surface,
+    borderRadius: 100,
+  },
+  emptyCartTitle: {
+    fontSize: typography.fontSize.xl,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
+    textAlign: 'center',
+  },
+  emptyCartSubtitle: {
+    fontSize: typography.fontSize.md,
+    color: colors.textSecondary,
+    marginBottom: spacing.xl,
+    textAlign: 'center',
+  },
+  browseBtn: {
+    flexDirection: 'row',
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  browseBtnIcon: {
+    marginRight: spacing.sm,
+  },
+  browseBtnText: {
+    fontSize: typography.fontSize.md,
+    fontWeight: '600',
+    color: colors.white,
   },
 });

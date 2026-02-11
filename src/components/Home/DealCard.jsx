@@ -3,19 +3,39 @@ import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 import AppText from '../common/AppText';
 import AppView from '../common/AppView';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useNavigation } from '@react-navigation/native';
 
-const DealCard = ({ item, onPress }) => {
+const DealCard = ({ item }) => {
+  const navigation = useNavigation();
+  // console.log('abc', item.items);
+  const handleViewItems = () => {
+    navigation.navigate('DealProducts', {
+      title: 'Smart Deals',
+      itemIds: item.items,
+    });
+    // console.log('View Items');
+  };
+
   return (
-    <TouchableOpacity activeOpacity={0.85} onPress={onPress}>
+    <TouchableOpacity activeOpacity={0.85} onPress={handleViewItems}>
       <AppView style={styles.card}>
         {/* Image */}
         {/* <AppView style={styles.imageWrapper}> */}
-        <Image source={item.image} style={styles.image} resizeMode="contain" />
+        <Image
+          source={
+            item?.photo
+              ? { uri: item.photo }
+              : require('../../assets/images/store.jpg')
+          }
+          style={styles.image}
+          resizeMode="contain"
+        />
+
         {/* </AppView> */}
 
         {/* Text */}
-        <AppText style={styles.title}>{item.title}</AppText>
-        <AppText style={styles.subtitle}>{item.subtitle}</AppText>
+        <AppText style={styles.title}>{item.heading}</AppText>
+        <AppText style={styles.subtitle}>{item.subheading}</AppText>
 
         {/* CTA */}
         <View style={styles.ctaRow}>

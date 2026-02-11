@@ -1,49 +1,71 @@
-import React from 'react';
-import { FlatList, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import DealCard from './DealCard';
 import SectionHeader from './SectionHeader';
 import { useNavigation } from '@react-navigation/native';
+import { colors } from '../../theme/colors';
+import { spacing } from '../../theme/spacing';
+import { typography } from '../../theme/typography';
 
 const DealsList = () => {
   const navigation = useNavigation();
-  const DEALS = [
-    {
-      id: '1',
-      title: 'Under ₹100',
-      subtitle: 'Fast-selling items',
-      image: require('../../assets/images/store.jpg'),
-    },
-    {
-      id: '2',
-      title: 'Bulk Packs',
-      subtitle: 'Under ₹2500',
-      image: require('../../assets/images/store.jpg'),
-    },
-    {
-      id: '3',
-      title: 'Best Sellers',
-      subtitle: 'High demand',
-      image: require('../../assets/images/store.jpg'),
-    },
-  ];
+  const [deals, setDeals] = useState([]);
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    fetchDeals();
+  }, []);
+
+  const fetchDeals = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        'https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com/deals',
+      );
+      const json = await response.json();
+      setDeals(json);
+      // console.log(json, 'abc');
+    } catch {
+      console.error('Error fetching product:', error);
+    } finally {
+      setLoading(false);
+      // console.log('api request done');
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loader}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loaderText}>Loading product details...</Text>
+      </View>
+    );
+  }
+
+  const functionViewAll = () => {
+    navigation.navigate('Deals');
+  };
 
   return (
     <View>
       <SectionHeader
         title="Smart Deals for Retailers"
         leftIcon="flame"
-        onPressViewAll={() => navigation.navigate('Deals')}
+        onPressViewAll={functionViewAll}
       />
 
       <View style={{ paddingLeft: 16, marginBottom: 20 }}>
         <FlatList
-          data={DEALS}
+          data={deals}
           horizontal
           showsHorizontalScrollIndicator={false}
-          keyExtractor={item => item.id}
-          renderItem={({ item }) => (
-            <DealCard item={item} onPress={() => console.log(item.title)} />
-          )}
+          keyExtractor={item => item.dealId}
+          renderItem={({ item }) => <DealCard item={item} />}
         />
       </View>
     </View>
@@ -51,3 +73,18 @@ const DealsList = () => {
 };
 
 export default DealsList;
+const styles = StyleSheet.create({
+  loader: {
+    flex: 1,
+    backgroundColor: colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+  },
+  loaderText: {
+    color: colors.textPrimary,
+    fontSize: typography.fontSize.md,
+    marginTop: spacing.lg,
+    textAlign: 'center',
+  },
+});
