@@ -6,6 +6,7 @@ import AppView from '../../components/common/AppView';
 import CategorieCard from '../../components/Home/CategorieCard';
 import { FlatList } from 'react-native';
 import { colors } from '../../theme/colors';
+import GoBackHeader from '../../components/common/GoBackHeader';
 
 const API_URL =
   'https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com/categories'; // 👈 replace this
@@ -40,7 +41,7 @@ const CategoriesScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <AppView style={styles.headerContainer}>
-        <Header />
+        <GoBackHeader title="Categories" />
       </AppView>
       <ScrollView
         showsVerticalScrollIndicator={false}

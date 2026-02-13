@@ -57,6 +57,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
     borderWidth: 1,
     borderColor: '#163a22',
+    marginBottom: 12,
   },
   image: {
     width: '100%',

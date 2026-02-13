@@ -5,6 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
   FlatList,
+  ActivityIndicator,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AppSafeArea from '../../components/common/AppSafeArea';
@@ -13,9 +14,17 @@ import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 import CategoriesSection from '../../components/Home/CategoriesSection';
+import ProductCard from '../../components/Product/ProductCard';
+import { useSelector } from 'react-redux';
+import { selectCartItemsArray } from '../../features/cart/cartSelectors';
 
 const SearchScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+  const cartItems = useSelector(selectCartItemsArray);
+  const cartItemCount = cartItems.length;
 
   const recentSearches = [
     { id: '1', text: 'Organic Vegetables' },
@@ -44,9 +53,28 @@ const SearchScreen = ({ navigation }) => {
     setSearchQuery('');
   };
 
-  const handleSearchSubmit = query => {
-    if (query.trim()) {
-      console.log('Search for:', query);
+  const handleSearchSubmit = async query => {
+    if (!query.trim()) return;
+
+    try {
+      setLoading(true);
+      setHasSearched(true);
+
+      const response = await fetch(
+        `https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com/search?q=${query}`,
+      );
+
+      const data = await response.json();
+
+      // If API returns array directly
+      // setSearchResults(Array.isArray(data) ? data : data?.products || []);
+      setSearchResults(data?.data);
+      console.log(data?.data);
+    } catch (error) {
+      console.log('Search Error:', error);
+      setSearchResults([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -142,7 +170,7 @@ const SearchScreen = ({ navigation }) => {
         </View>
 
         {/* Main Content */}
-        {searchQuery.length === 0 ? (
+        {!hasSearched ? (
           <FlatList
             data={[]}
             keyExtractor={() => 'key'}
@@ -154,9 +182,6 @@ const SearchScreen = ({ navigation }) => {
                 <View style={styles.section}>
                   <View style={styles.sectionHeader}>
                     <AppText style={styles.sectionTitle}>Recent</AppText>
-                    <TouchableOpacity activeOpacity={0.7}>
-                      <AppText style={styles.clearLink}>Clear</AppText>
-                    </TouchableOpacity>
                   </View>
                   <View style={styles.recentList}>
                     {recentSearches.map((item, index) => (
@@ -192,6 +217,21 @@ const SearchScreen = ({ navigation }) => {
               </>
             }
           />
+        ) : loading ? (
+          <View style={styles.loaderContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+        ) : searchResults.length > 0 ? (
+          <FlatList
+            data={searchResults}
+            keyExtractor={item => item.productId}
+            numColumns={2}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 20 }}
+            renderItem={({ item }) => <ProductCard item={item} />}
+            columnWrapperStyle={styles.gridContainer}
+            scrollEnabled={false}
+          />
         ) : (
           <View style={styles.emptyState}>
             <Ionicons
@@ -207,6 +247,26 @@ const SearchScreen = ({ navigation }) => {
           </View>
         )}
       </View>
+
+      {/* Bottom Cart Tab */}
+      {cartItemCount > 0 && (
+        <View style={styles.cartTab}>
+          <View style={styles.cartInfo}>
+            <AppText style={styles.cartCount}>
+              {cartItemCount} item{cartItemCount !== 1 ? 's' : ''}
+            </AppText>
+            <AppText style={styles.cartLabel}>in cart</AppText>
+          </View>
+
+          <TouchableOpacity
+            style={styles.viewCartButton}
+            onPress={() => navigation.navigate('Cart')}
+          >
+            <AppText style={styles.viewCartText}>View Cart</AppText>
+            <Ionicons name="chevron-forward" size={18} color="#000" />
+          </TouchableOpacity>
+        </View>
+      )}
     </AppSafeArea>
   );
 };
@@ -218,7 +278,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  gridContainer: {
+    paddingHorizontal: 16,
+    justifyContent: 'space-between',
+    marginVertical: 10,
+  },
   // Header
   header: {
     flexDirection: 'row',
@@ -409,5 +478,47 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: colors.textPrimary,
     textAlign: 'center',
+  },
+  cartTab: {
+    position: 'absolute',
+    bottom: 120,
+    left: 16, // 👈 side margin
+    right: 16,
+    backgroundColor: '#22C55E',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  cartInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  cartCount: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#000',
+  },
+  cartLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#000',
+  },
+  viewCartButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+  },
+  viewCartText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#000',
   },
 });

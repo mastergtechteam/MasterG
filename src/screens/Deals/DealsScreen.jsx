@@ -15,6 +15,7 @@ import { colors } from '../../theme/colors';
 import { useNavigation } from '@react-navigation/native';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
+import GoBackHeader from '../../components/common/GoBackHeader';
 const DealsScreen = () => {
   const navigation = useNavigation();
   const [deals, setDeals] = useState([]);
@@ -56,7 +57,7 @@ const DealsScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <AppView style={styles.headerContainer}>
-        <Header />
+        <GoBackHeader title="Today's Deals" />
       </AppView>
       <ScrollView
         showsVerticalScrollIndicator={false}

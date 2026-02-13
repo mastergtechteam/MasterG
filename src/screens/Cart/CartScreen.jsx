@@ -38,6 +38,8 @@ const CartScreen = () => {
   const navigation = useNavigation();
   const [modalVisible, setModalVisible] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [orderConfirmationVisible, setOrderConfirmationVisible] =
+    useState(false);
   const [expandedSections, setExpandedSections] = useState({
     billing: false,
     summary: false,
@@ -144,8 +146,16 @@ const CartScreen = () => {
       if (response.status >= 200 && response.status < 300) {
         dispatch(clearCart()); // empty cart
         setModalVisible(false);
+        setOrderConfirmationVisible(false);
+        setOrderPlaced(true);
 
-        Alert.alert('Success', 'Order placed successfully!');
+        setTimeout(() => {
+          setOrderPlaced(false);
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'App' }],
+          });
+        }, 3000);
       } else {
         Alert.alert(
           'Order Failed',
@@ -337,7 +347,7 @@ const CartScreen = () => {
 
           <TouchableOpacity
             style={styles.placeOrderBtn}
-            onPress={() => setModalVisible(true)}
+            onPress={() => setOrderConfirmationVisible(true)}
           >
             <Text style={styles.placeOrderText}>Proceed to pay</Text>
             <Text style={styles.placeOrderPrice}>₹{finalTotal}</Text>
@@ -345,7 +355,128 @@ const CartScreen = () => {
         </ScrollView>
       )}
 
-      {/* Payment Modal */}
+      {/* Order Confirmation Modal */}
+      <Modal
+        transparent={true}
+        visible={orderConfirmationVisible}
+        onRequestClose={() => setOrderConfirmationVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.confirmationModalContent}>
+            <View style={styles.confirmationHeader}>
+              <MaterialDesignIcons
+                name="shopping-outline"
+                size={48}
+                color={colors.primary}
+              />
+            </View>
+
+            <Text style={styles.confirmationTitle}>Ready to Place Order?</Text>
+            <Text style={styles.confirmationSubtitle}>
+              You're about to place an order with {cartItems.length} item
+              {cartItems.length > 1 ? 's' : ''}
+            </Text>
+
+            <View style={styles.confirmationDetails}>
+              <View style={styles.confirmationDetailItem}>
+                <Text style={styles.confirmationDetailLabel}>Order Total</Text>
+                <Text style={styles.confirmationDetailValue}>
+                  ₹{finalTotal}
+                </Text>
+              </View>
+              <View style={styles.confirmationDivider} />
+              <View style={styles.confirmationDetailItem}>
+                <Text style={styles.confirmationDetailLabel}>
+                  Delivery Time
+                </Text>
+                <Text style={styles.confirmationDetailValue}>
+                  {DELIVERY_TIME}
+                </Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={styles.placeOrderConfirmBtn}
+              onPress={() => {
+                setOrderConfirmationVisible(false);
+                setModalVisible(true);
+              }}
+            >
+              <MaterialDesignIcons
+                name="check-circle"
+                size={20}
+                color={colors.white}
+                style={{ marginRight: spacing.sm }}
+              />
+              <Text style={styles.placeOrderConfirmText}>Place Order</Text>
+            </TouchableOpacity>
+
+            <Pressable
+              style={styles.confirmationCancelBtn}
+              onPress={() => setOrderConfirmationVisible(false)}
+            >
+              <Text style={styles.confirmationCancelText}>Cancel</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Order Confirmed Modal */}
+      <Modal
+        transparent={true}
+        visible={orderPlaced}
+        onRequestClose={() => setOrderPlaced(false)}
+      >
+        <View style={styles.confirmedModalOverlay}>
+          <View style={styles.confirmedModalContent}>
+            <View style={styles.celebrationContainer}>
+              <Text style={styles.partyPopper}>🎉</Text>
+            </View>
+
+            <Text style={styles.confirmedTitle}>Order Confirmed!</Text>
+            <Text style={styles.confirmedSubtitle}>
+              Your order has been placed successfully
+            </Text>
+
+            <View style={styles.confirmedDetails}>
+              <View style={styles.confirmedDetailRow}>
+                <MaterialDesignIcons
+                  name="check-circle"
+                  size={20}
+                  color={colors.primary}
+                />
+                <Text style={styles.confirmedDetailText}>
+                  Order confirmed and processing
+                </Text>
+              </View>
+              <View style={styles.confirmedDetailRow}>
+                <MaterialDesignIcons
+                  name="truck-delivery"
+                  size={20}
+                  color={colors.primary}
+                />
+                <Text style={styles.confirmedDetailText}>
+                  Estimated delivery: {DELIVERY_TIME}
+                </Text>
+              </View>
+              <View style={styles.confirmedDetailRow}>
+                <MaterialDesignIcons
+                  name="email-outline"
+                  size={20}
+                  color={colors.primary}
+                />
+                <Text style={styles.confirmedDetailText}>
+                  Confirmation sent to email
+                </Text>
+              </View>
+            </View>
+
+            <Text style={styles.thanksText}>
+              Thank you for your purchase! 🛍️
+            </Text>
+          </View>
+        </View>
+      </Modal>
 
       {/* Payment Modal */}
       <Modal
@@ -777,6 +908,153 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSize.md,
     fontWeight: '600',
     color: colors.textPrimary,
+  },
+
+  // Order Confirmation Modal Styles
+  confirmationModalContent: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.lg,
+    alignItems: 'center',
+  },
+  confirmationHeader: {
+    marginBottom: spacing.lg,
+    padding: spacing.md,
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: 16,
+  },
+  confirmationTitle: {
+    fontSize: typography.fontSize.xl,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
+    textAlign: 'center',
+  },
+  confirmationSubtitle: {
+    fontSize: typography.fontSize.md,
+    color: colors.textSecondary,
+    marginBottom: spacing.lg,
+    textAlign: 'center',
+  },
+  confirmationDetails: {
+    width: '100%',
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: 12,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  confirmationDetailItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+  },
+  confirmationDetailLabel: {
+    fontSize: typography.fontSize.md,
+    color: colors.textSecondary,
+    fontWeight: '500',
+  },
+  confirmationDetailValue: {
+    fontSize: typography.fontSize.md,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  confirmationDivider: {
+    height: 1,
+    backgroundColor: colors.border,
+  },
+  placeOrderConfirmBtn: {
+    width: '100%',
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    paddingVertical: spacing.lg,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  placeOrderConfirmText: {
+    fontSize: typography.fontSize.md,
+    fontWeight: '700',
+    color: colors.white,
+  },
+  confirmationCancelBtn: {
+    width: '100%',
+    backgroundColor: colors.border,
+    borderRadius: 12,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+  },
+  confirmationCancelText: {
+    fontSize: typography.fontSize.md,
+    fontWeight: '600',
+    color: colors.textPrimary,
+  },
+
+  // Order Confirmed Modal Styles
+  confirmedModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  confirmedModalContent: {
+    backgroundColor: colors.surface,
+    borderRadius: 24,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xl,
+    alignItems: 'center',
+    marginHorizontal: spacing.lg,
+  },
+  celebrationContainer: {
+    marginBottom: spacing.lg,
+  },
+  partyPopper: {
+    fontSize: 80,
+  },
+  confirmedTitle: {
+    fontSize: typography.fontSize.xl,
+    fontWeight: '700',
+    color: colors.primary,
+    marginBottom: spacing.sm,
+    textAlign: 'center',
+  },
+  confirmedSubtitle: {
+    fontSize: typography.fontSize.md,
+    color: colors.textSecondary,
+    marginBottom: spacing.lg,
+    textAlign: 'center',
+  },
+  confirmedDetails: {
+    width: '100%',
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: 12,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  confirmedDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  confirmedDetailText: {
+    fontSize: typography.fontSize.md,
+    color: colors.textPrimary,
+    marginLeft: spacing.md,
+    flex: 1,
+  },
+  thanksText: {
+    fontSize: typography.fontSize.md,
+    fontWeight: '600',
+    color: colors.primary,
+    textAlign: 'center',
   },
   // Empty Cart Styles
   emptyCartContainer: {
