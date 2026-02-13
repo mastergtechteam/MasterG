@@ -12,7 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
-
+import Loader from '../common/Loader';
 const DealsList = () => {
   const navigation = useNavigation();
   const [deals, setDeals] = useState([]);
@@ -39,12 +39,7 @@ const DealsList = () => {
   };
 
   if (loading) {
-    return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loaderText}>Loading product details...</Text>
-      </View>
-    );
+    return <Loader />;
   }
 
   const functionViewAll = () => {

@@ -6,7 +6,7 @@ import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 
-const GoBackHeader = ({ title = 'Back' }) => {
+const GoBackHeader = ({ title = 'Back', showSearch = true }) => {
   const navigation = useNavigation();
 
   const handleBackPress = () => {
@@ -34,13 +34,18 @@ const GoBackHeader = ({ title = 'Back' }) => {
       </Text>
 
       {/* Right - Search Button */}
-      <TouchableOpacity
-        onPress={handleSearchPress}
-        style={styles.iconButton}
-        activeOpacity={0.7}
-      >
-        <Ionicons name="search" size={24} color={colors.textPrimary} />
-      </TouchableOpacity>
+      {showSearch ? (
+        <TouchableOpacity
+          onPress={handleSearchPress}
+          style={styles.iconButton}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="search" size={24} color={colors.textPrimary} />
+        </TouchableOpacity>
+      ) : (
+        // Keep spacing so title stays centered
+        <View style={styles.iconButton} />
+      )}
     </View>
   );
 };

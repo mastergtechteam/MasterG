@@ -57,6 +57,7 @@ const ProductsDetailsScreen = () => {
           `https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com/products/${productId}`,
         );
         const json = await response.json();
+        console.log(json.data);
 
         if (json.success) {
           setProduct(json.data);
@@ -134,8 +135,8 @@ const ProductsDetailsScreen = () => {
 
   const getExpiryDate = () => {
     try {
-      if (!product.expiry) return 'Not Available';
-      const date = new Date(product.expiry);
+      if (!product.expiry.expiryDate) return 'Not Available';
+      const date = new Date(product.expiry.expiryDate);
       return date.toLocaleDateString('en-IN', {
         month: 'short',
         year: 'numeric',
@@ -217,35 +218,14 @@ const ProductsDetailsScreen = () => {
 
   return (
     <AppSafeArea style={styles.container}>
-      <GoBackHeader title={product.name || 'Product Details'} />
+      <GoBackHeader
+        title={product.name || 'Product Details'}
+        showSearch={false}
+      />
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        {/* <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.headerButton}
-          >
-            <MaterialCommunityIcons
-              name="chevron-left"
-              size={28}
-              color={colors.textPrimary}
-            />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle} numberOfLines={1}>
-            {product.name}
-          </Text>
-          <TouchableOpacity style={styles.headerButton}>
-            <MaterialCommunityIcons
-              name="share-variant"
-              size={24}
-              color={colors.textPrimary}
-            />
-          </TouchableOpacity>
-        </View> */}
-
         {/* Image Carousel */}
         <View style={styles.carouselContainer}>
           <FlatList
@@ -856,7 +836,7 @@ const styles = StyleSheet.create({
   quantityBtnText: {
     fontSize: typography.fontSize.lg,
     fontWeight: '700',
-    color: colors.text,
+    color: colors.white,
   },
   quantityInfo: {
     alignItems: 'center',

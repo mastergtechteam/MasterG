@@ -4,12 +4,14 @@ import AppView from '../common/AppView';
 import SectionHeader from './SectionHeader';
 import CategorieCard from './CategorieCard';
 import { useNavigation } from '@react-navigation/native';
+import Loader from '../common/Loader';
 
 const API_URL =
   'https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com/categories'; // 👈 replace this
 
 const CategoriesSection = () => {
   const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -18,6 +20,7 @@ const CategoriesSection = () => {
 
   const fetchCategories = async () => {
     try {
+      setLoading(true);
       const response = await fetch(API_URL);
       const json = await response.json();
 
@@ -34,8 +37,14 @@ const CategoriesSection = () => {
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (loading) {
+    return <Loader />;
+  }
   return (
     <AppView>
       <SectionHeader

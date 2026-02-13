@@ -96,6 +96,7 @@ const CartScreen = () => {
         quantity: quantity,
         unit: product.unit || 'UNIT', // fallback if unit not present
         price: product.discountedPrice,
+        // image:"https://example.com"
       })),
 
       billing: {

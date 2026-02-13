@@ -11,6 +11,7 @@ import DealsList from '../../components/Home/DealsList';
 import InsightCard from '../../components/Home/InsightCard';
 import CategoriesSection from '../../components/Home/CategoriesSection';
 import { useNavigation } from '@react-navigation/native';
+import CartBottomTab from '../../components/common/cartBottomTab';
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -22,47 +23,50 @@ const HomeScreen = () => {
   };
   return (
     <AppSafeArea>
-      <FlatList
-        data={[]} // dummy data
-        keyExtractor={() => 'key'}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 70 }}
-        ListHeaderComponent={
-          <>
-            <Header />
-            <BannerCrousel />
+      <View style={{ flex: 1 }}>
+        <FlatList
+          data={[]} // dummy data
+          keyExtractor={() => 'key'}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 70 }}
+          ListHeaderComponent={
+            <>
+              <Header />
+              <BannerCrousel />
 
-            <View
-              style={{
-                flexDirection: 'row',
-                gap: 12,
-                paddingHorizontal: 16,
-                marginBottom: 16,
-              }}
-            >
-              <ActionCard
-                icon="mic"
-                title="Speak & Order"
-                subtitle="Order in seconds using voice"
-                onPress={handleSpeakOrder}
-              />
+              <View
+                style={{
+                  flexDirection: 'row',
+                  gap: 12,
+                  paddingHorizontal: 16,
+                  marginBottom: 16,
+                }}
+              >
+                <ActionCard
+                  icon="mic"
+                  title="Speak & Order"
+                  subtitle="Order in seconds using voice"
+                  onPress={handleSpeakOrder}
+                />
 
-              <ActionCard
-                icon="cart"
-                title="Quick Buy"
-                subtitle="Buy frequently ordered items"
-                iconBgColor="#143620"
-                onPress={handleSpeakOrder}
-              />
-            </View>
+                <ActionCard
+                  icon="cart"
+                  title="Quick Buy"
+                  subtitle="Buy frequently ordered items"
+                  iconBgColor="#143620"
+                  onPress={handleSpeakOrder}
+                />
+              </View>
 
-            <AlertStrip />
-            <DealsList />
-            <CategoriesSection />
-            <InsightCard />
-          </>
-        }
-      />
+              <AlertStrip />
+              <DealsList />
+              <CategoriesSection />
+              <InsightCard />
+            </>
+          }
+        />
+        <CartBottomTab />
+      </View>
     </AppSafeArea>
   );
 };

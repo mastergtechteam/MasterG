@@ -17,6 +17,10 @@ import { selectCartItemsArray } from '../../features/cart/cartSelectors';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { fetchData } from '../../features/common/commonThunks';
 import GoBackHeader from '../../components/common/GoBackHeader';
+import Loader from '../../components/common/Loader';
+import EmptyState from '../../components/common/EmptyState';
+import ErrorState from '../../components/common/ErrorState';
+import CartBottomTab from '../../components/common/cartBottomTab';
 
 const { width } = Dimensions.get('window');
 const ITEM_WIDTH = (width - 48) / 2;
@@ -56,31 +60,29 @@ const ProductsScreen = () => {
   const products = data?.data || [];
 
   if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <Text style={{ textAlign: 'center', marginTop: 20 }}>
-          Loading products...
-        </Text>
-      </SafeAreaView>
-    );
+    return <Loader />;
   }
 
   if (error) {
     return (
-      <SafeAreaView style={styles.container}>
-        <Text style={{ textAlign: 'center', marginTop: 20 }}>
-          Something went wrong
-        </Text>
-      </SafeAreaView>
+      <ErrorState
+        title="Failed to Load Products"
+        message="Unable to fetch products. Check your connection and try again."
+        // icon={require('../../assets/images/error.png')}
+        // errorCode="500"
+        // onRetry={() => refetchData()}
+        retryLabel="Retry"
+      />
     );
   }
   if (!loading && products.length === 0) {
     return (
-      <SafeAreaView style={styles.container}>
-        <Text style={{ textAlign: 'center', marginTop: 20 }}>
-          No products found
-        </Text>
-      </SafeAreaView>
+      <EmptyState
+        title="No Products Found"
+        message="Try searching with different keywords"
+        // icon={require('../../assets/images/empty-search.png')}
+        showIcon={true}
+      />
     );
   }
 
@@ -104,21 +106,22 @@ const ProductsScreen = () => {
 
       {/* Bottom Cart Tab */}
       {cartItemCount > 0 && (
-        <View style={styles.cartTab}>
-          <View style={styles.cartInfo}>
-            <Text style={styles.cartCount}>
-              {cartItemCount} item{cartItemCount !== 1 ? 's' : ''}
-            </Text>
-            <Text style={styles.cartLabel}>in cart</Text>
-          </View>
-          <TouchableOpacity
-            style={styles.viewCartButton}
-            onPress={() => navigation.navigate('Cart')}
-          >
-            <Text style={styles.viewCartText}>View Cart</Text>
-            <Ionicons name="chevron-forward" size={18} color="#000" />
-          </TouchableOpacity>
-        </View>
+        // <View style={styles.cartTab}>
+        //   <View style={styles.cartInfo}>
+        //     <Text style={styles.cartCount}>
+        //       {cartItemCount} item{cartItemCount !== 1 ? 's' : ''}
+        //     </Text>
+        //     <Text style={styles.cartLabel}>in cart</Text>
+        //   </View>
+        //   <TouchableOpacity
+        //     style={styles.viewCartButton}
+        //     onPress={() => navigation.navigate('Cart')}
+        //   >
+        //     <Text style={styles.viewCartText}>View Cart</Text>
+        //     <Ionicons name="chevron-forward" size={18} color="#000" />
+        //   </TouchableOpacity>
+        // </View>
+        <CartBottomTab />
       )}
     </SafeAreaView>
   );

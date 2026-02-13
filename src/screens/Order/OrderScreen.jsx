@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
 
   // Order Card
   orderCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.background,
     borderRadius: 16,
     marginBottom: 12,
     overflow: 'hidden',

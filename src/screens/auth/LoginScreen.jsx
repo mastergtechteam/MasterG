@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Image,
   Animated,
+  KeyboardAvoidingView,
 } from 'react-native';
 
 import AppSafeArea from '../../components/common/AppSafeArea';
@@ -47,56 +48,62 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <AppSafeArea style={{ padding: spacing.lg }}>
-      {/* Logo Section */}
-      <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-        <Image source={logo} style={styles.logo} resizeMode="contain" />
-        <LinearGradient
-          colors={['#000000', '#FFFFFF', '#FFFFFF', '#000000']}
-          locations={[0, 0.25, 0.5, 1]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.divider}
-        />
-        <AppText style={styles.subtitle}>B2B Voice Ordering Platform</AppText>
-      </Animated.View>
-
-      {/* Login Card */}
-      <AppView
-        style={{
-          borderWidth: 1,
-          borderColor: colors.border,
-          borderRadius: 14,
-          padding: spacing.lg,
-          marginBottom: spacing.lg,
-        }}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
-        <AppText style={styles.title}>Login With Mobile</AppText>
+        {/* Logo Section */}
+        <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+          <Image source={logo} style={styles.logo} resizeMode="contain" />
+          <LinearGradient
+            colors={['#000000', '#FFFFFF', '#FFFFFF', '#000000']}
+            locations={[0, 0.25, 0.5, 1]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.divider}
+          />
+          <AppText style={styles.subtitle}>B2B Voice Ordering Platform</AppText>
+        </Animated.View>
 
-        <AppView style={[styles.inputRow, { borderColor: colors.border }]}>
-          <AppText style={styles.countryCode}>+91</AppText>
+        {/* Login Card */}
+        <AppView
+          style={{
+            borderWidth: 1,
+            borderColor: colors.border,
+            borderRadius: 14,
+            padding: spacing.lg,
+            marginBottom: spacing.lg,
+          }}
+        >
+          <AppText style={styles.title}>Login With Mobile</AppText>
 
-          <TextInput
-            placeholder="Enter mobile number"
-            placeholderTextColor={colors.textMuted}
-            keyboardType="number-pad"
-            maxLength={10}
-            value={mobile}
-            onChangeText={setMobile}
-            style={[styles.input, { color: colors.textPrimary }]}
+          <AppView style={[styles.inputRow, { borderColor: colors.border }]}>
+            <AppText style={styles.countryCode}>+91</AppText>
+
+            <TextInput
+              placeholder="Enter mobile number"
+              placeholderTextColor={colors.textMuted}
+              keyboardType="number-pad"
+              maxLength={10}
+              value={mobile}
+              onChangeText={setMobile}
+              style={[styles.input, { color: colors.textPrimary }]}
+            />
+          </AppView>
+
+          <AppButton
+            title="Get OTP"
+            onPress={handleGetOtp}
+            style={styles.button}
+          />
+          <AppButton
+            title="Skip"
+            onPress={() => navigation.navigate('App')}
+            style={[styles.button]}
           />
         </AppView>
-
-        <AppButton
-          title="Get OTP"
-          onPress={handleGetOtp}
-          style={styles.button}
-        />
-        <AppButton
-          title="Skip"
-          onPress={() => navigation.navigate('App')}
-          style={[styles.button]}
-        />
-      </AppView>
+      </KeyboardAvoidingView>
     </AppSafeArea>
   );
 }

@@ -27,7 +27,7 @@ const SplashScreen = () => {
 
     const timer = setTimeout(() => {
       navigation.navigate('Auth');
-    }, 5000);
+    }, 3000);
     // const timer = setTimeout(() => {
     //   navigation.replace('App');
     // }, 5000);

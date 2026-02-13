@@ -12,6 +12,7 @@ import {
   StatusBar,
   Platform,
   ToastAndroid,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
@@ -192,97 +193,103 @@ const AddRetailerScreen = () => {
   return (
     <SafeAreaView edges={['bottom']} style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0B0B0B" />
-
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        onScrollBeginDrag={() => setShowTypeDropdown(false)}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
-        {/* <Header /> */}
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          onScrollBeginDrag={() => setShowTypeDropdown(false)}
+        >
+          {/* <Header /> */}
 
-        <Text style={styles.title}>Add Retailer</Text>
+          <Text style={styles.title}>Add Retailer</Text>
 
-        <RetailerInput
-          label="Retailer Name"
-          value={formData.name}
-          onChangeText={v => setFormData({ ...formData, name: v })}
-        />
+          <RetailerInput
+            label="Retailer Name"
+            value={formData.name}
+            onChangeText={v => setFormData({ ...formData, name: v })}
+          />
 
-        <RetailerInput
-          label="Mobile"
-          keyboardType="phone-pad"
-          maxLength={10}
-          value={formData.mobile}
-          onChangeText={v =>
-            setFormData({ ...formData, mobile: v.replace(/[^0-9]/g, '') })
-          }
-        />
+          <RetailerInput
+            label="Mobile"
+            keyboardType="phone-pad"
+            maxLength={10}
+            value={formData.mobile}
+            onChangeText={v =>
+              setFormData({ ...formData, mobile: v.replace(/[^0-9]/g, '') })
+            }
+          />
 
-        <RetailerInput
-          label="Alternate Mobile"
-          keyboardType="phone-pad"
-          maxLength={10}
-          value={formData.alternate_mobile}
-          onChangeText={v =>
-            setFormData({
-              ...formData,
-              alternate_mobile: v.replace(/[^0-9]/g, ''),
-            })
-          }
-        />
+          <RetailerInput
+            label="Alternate Mobile"
+            keyboardType="phone-pad"
+            maxLength={10}
+            value={formData.alternate_mobile}
+            onChangeText={v =>
+              setFormData({
+                ...formData,
+                alternate_mobile: v.replace(/[^0-9]/g, ''),
+              })
+            }
+          />
 
-        <RetailerInput
-          label="Email"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          value={formData.email}
-          onChangeText={v => setFormData({ ...formData, email: v })}
-        />
+          <RetailerInput
+            label="Email"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            value={formData.email}
+            onChangeText={v => setFormData({ ...formData, email: v })}
+          />
 
-        <RetailerInput
-          label="Shop Name"
-          value={formData.shop_name}
-          onChangeText={v => setFormData({ ...formData, shop_name: v })}
-        />
+          <RetailerInput
+            label="Shop Name"
+            value={formData.shop_name}
+            onChangeText={v => setFormData({ ...formData, shop_name: v })}
+          />
 
-        <RetailerInput
-          label="Address"
-          value={formData.address}
-          onChangeText={v => setFormData({ ...formData, address: v })}
-        />
+          <RetailerInput
+            label="Address"
+            value={formData.address}
+            onChangeText={v => setFormData({ ...formData, address: v })}
+          />
 
-        <RetailerInput
-          label="Nearby Location / Landmark"
-          value={formData.near_by_location}
-          onChangeText={v => setFormData({ ...formData, near_by_location: v })}
-        />
+          <RetailerInput
+            label="Nearby Location / Landmark"
+            value={formData.near_by_location}
+            onChangeText={v =>
+              setFormData({ ...formData, near_by_location: v })
+            }
+          />
 
-        <RetailerInput
-          label="Pincode"
-          keyboardType="number-pad"
-          maxLength={6}
-          value={formData.pincode}
-          onChangeText={v =>
-            setFormData({ ...formData, pincode: v.replace(/[^0-9]/g, '') })
-          }
-        />
-        <RetailerInput
-          label="Area"
-          value={formData.area}
-          onChangeText={v => setFormData({ ...formData, area: v })}
-        />
-        <RetailerInput
-          label="City"
-          value={formData.city}
-          onChangeText={v => setFormData({ ...formData, city: v })}
-        />
+          <RetailerInput
+            label="Pincode"
+            keyboardType="number-pad"
+            maxLength={6}
+            value={formData.pincode}
+            onChangeText={v =>
+              setFormData({ ...formData, pincode: v.replace(/[^0-9]/g, '') })
+            }
+          />
+          <RetailerInput
+            label="Area"
+            value={formData.area}
+            onChangeText={v => setFormData({ ...formData, area: v })}
+          />
+          <RetailerInput
+            label="City"
+            value={formData.city}
+            onChangeText={v => setFormData({ ...formData, city: v })}
+          />
 
-        <RetailerInput
-          label="State"
-          value={formData.state}
-          onChangeText={v => setFormData({ ...formData, state: v })}
-        />
+          <RetailerInput
+            label="State"
+            value={formData.state}
+            onChangeText={v => setFormData({ ...formData, state: v })}
+          />
 
-        {/* <RetailerInput
+          {/* <RetailerInput
           label="Latitude"
           editable={false}
           value={formData.lat}
@@ -302,57 +309,58 @@ const AddRetailerScreen = () => {
           }
         /> */}
 
-        <GetLocationButton
-          onLocationFetched={loc =>
-            setFormData({
-              ...formData,
-              lat: loc.lat || '',
-              lng: loc.lng || '',
-              // address: loc.area || '',
-              area: loc.area || '',
-              pincode: loc.pincode || '',
-              city: loc.city || '',
-              state: loc.state || '',
-            })
-          }
-        />
+          <GetLocationButton
+            onLocationFetched={loc =>
+              setFormData({
+                ...formData,
+                lat: loc.lat || '',
+                lng: loc.lng || '',
+                // address: loc.area || '',
+                area: loc.area || '',
+                pincode: loc.pincode || '',
+                city: loc.city || '',
+                state: loc.state || '',
+              })
+            }
+          />
 
-        {/* <RetailerInput
+          {/* <RetailerInput
           label="Longitude"
           editable={false}
           value={formData.lng}
         /> */}
 
-        <TypeDropdown
-          value={formData.type}
-          options={retailerTypes}
-          visible={showTypeDropdown}
-          onToggle={() => setShowTypeDropdown(!showTypeDropdown)}
-          onSelect={v => {
-            setFormData({ ...formData, type: v });
-            setShowTypeDropdown(false);
-          }}
-        />
+          <TypeDropdown
+            value={formData.type}
+            options={retailerTypes}
+            visible={showTypeDropdown}
+            onToggle={() => setShowTypeDropdown(!showTypeDropdown)}
+            onSelect={v => {
+              setFormData({ ...formData, type: v });
+              setShowTypeDropdown(false);
+            }}
+          />
 
-        <UploadImageBtn images={images} onChange={setImages} />
+          <UploadImageBtn images={images} onChange={setImages} />
 
-        <TouchableOpacity
-          onPress={handleSubmit}
-          disabled={loading}
-          activeOpacity={0.8}
-        >
-          <LinearGradient
-            colors={['#8303F0', '#0780FD']}
-            style={styles.submitButton}
+          <TouchableOpacity
+            onPress={handleSubmit}
+            disabled={loading}
+            activeOpacity={0.8}
           >
-            {loading ? (
-              <ActivityIndicator color="#FFF" />
-            ) : (
-              <Text style={styles.submitText}>Submit</Text>
-            )}
-          </LinearGradient>
-        </TouchableOpacity>
-      </ScrollView>
+            <LinearGradient
+              colors={['#8303F0', '#0780FD']}
+              style={styles.submitButton}
+            >
+              {loading ? (
+                <ActivityIndicator color="#FFF" />
+              ) : (
+                <Text style={styles.submitText}>Submit</Text>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };

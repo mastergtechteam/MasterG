@@ -6,6 +6,7 @@ import {
   Image,
   Animated,
   Pressable,
+  KeyboardAvoidingView,
 } from 'react-native';
 
 import AppSafeArea from '../../components/common/AppSafeArea';
@@ -63,62 +64,68 @@ export default function OtpScreen({ navigation, route }) {
   return (
     <AppSafeArea style={{ padding: spacing.lg }}>
       {/* Logo Section */}
-      <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-        <Image source={logo} style={styles.logo} resizeMode="contain" />
-        <LinearGradient
-          colors={['#000000', '#FFFFFF', '#FFFFFF', '#000000']}
-          locations={[0, 0.25, 0.5, 1]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.divider}
-        />
-        <AppText style={styles.subtitle}>B2B Voice Ordering Platform</AppText>
-      </Animated.View>
-
-      {/* OTP Card */}
-      <AppView
-        style={{
-          borderWidth: 1,
-          borderColor: colors.border,
-          borderRadius: 14,
-          padding: spacing.lg,
-        }}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
-        <AppText style={styles.title}>Enter OTP</AppText>
+        <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+          <Image source={logo} style={styles.logo} resizeMode="contain" />
+          <LinearGradient
+            colors={['#000000', '#FFFFFF', '#FFFFFF', '#000000']}
+            locations={[0, 0.25, 0.5, 1]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.divider}
+          />
+          <AppText style={styles.subtitle}>B2B Voice Ordering Platform</AppText>
+        </Animated.View>
 
-        <AppText style={styles.sentText}>Sent to {mobile}</AppText>
+        {/* OTP Card */}
+        <AppView
+          style={{
+            borderWidth: 1,
+            borderColor: colors.border,
+            borderRadius: 14,
+            padding: spacing.lg,
+          }}
+        >
+          <AppText style={styles.title}>Enter OTP</AppText>
 
-        {/* OTP Boxes */}
-        <AppView style={styles.otpRow}>
-          {otp.map((digit, index) => (
-            <TextInput
-              key={index}
-              ref={ref => (inputs.current[index] = ref)}
-              value={digit}
-              onChangeText={val => handleChange(val, index)}
-              keyboardType="number-pad"
-              maxLength={1}
-              style={[
-                styles.otpBox,
-                {
-                  borderColor: colors.border,
-                  color: colors.textPrimary,
-                },
-              ]}
-            />
-          ))}
+          <AppText style={styles.sentText}>Sent to {mobile}</AppText>
+
+          {/* OTP Boxes */}
+          <AppView style={styles.otpRow}>
+            {otp.map((digit, index) => (
+              <TextInput
+                key={index}
+                ref={ref => (inputs.current[index] = ref)}
+                value={digit}
+                onChangeText={val => handleChange(val, index)}
+                keyboardType="number-pad"
+                maxLength={1}
+                style={[
+                  styles.otpBox,
+                  {
+                    borderColor: colors.border,
+                    color: colors.textPrimary,
+                  },
+                ]}
+              />
+            ))}
+          </AppView>
+
+          <AppButton
+            title="Verify & Login"
+            onPress={handleVerify}
+            style={styles.button}
+          />
+
+          <Pressable onPress={() => navigation.goBack()}>
+            <AppText style={styles.changeNumber}>Change number</AppText>
+          </Pressable>
         </AppView>
-
-        <AppButton
-          title="Verify & Login"
-          onPress={handleVerify}
-          style={styles.button}
-        />
-
-        <Pressable onPress={() => navigation.goBack()}>
-          <AppText style={styles.changeNumber}>Change number</AppText>
-        </Pressable>
-      </AppView>
+      </KeyboardAvoidingView>
     </AppSafeArea>
   );
 }
