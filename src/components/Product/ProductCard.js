@@ -145,6 +145,8 @@ const styles = StyleSheet.create({
   productImage: {
     width: '100%',
     height: '100%',
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
   },
   badge: {
     position: 'absolute',
@@ -174,6 +176,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
     padding: 1,
+    height: 32,
   },
   onlyLabel: {
     color: '#777',

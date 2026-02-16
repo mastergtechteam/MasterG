@@ -166,10 +166,10 @@ const AddRetailerScreen = () => {
         console.log('RESPONSE 👉', response);
         showToast('Account created successfully ✅');
 
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'App' }],
-        });
+        // navigation.reset({
+        //   index: 0,
+        //   routes: [{ name: 'App' }],
+        // });
       } else {
         showToast(json?.message || 'Failed to create account');
       }

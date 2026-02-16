@@ -11,6 +11,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import Entypo from 'react-native-vector-icons/Entypo';
+import { getAuth, signOut } from '@react-native-firebase/auth';
 
 import AppSafeArea from '../../components/common/AppSafeArea';
 import AppView from '../../components/common/AppView';
@@ -64,8 +65,17 @@ const ProfileScreen = () => {
     }));
   };
 
-  const handleLogout = () => {
-    console.log('🚪 LOGOUT clicked');
+  const handleLogout = async () => {
+    try {
+      await signOut(getAuth());
+
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Auth' }],
+      });
+    } catch (error) {
+      console.log('Logout Error:', error);
+    }
   };
 
   // const handleSettings = () => {
