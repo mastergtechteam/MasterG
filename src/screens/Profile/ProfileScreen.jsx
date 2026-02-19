@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   TouchableOpacity,
@@ -20,6 +20,8 @@ import Header from '../../components/common/Header';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import RNRestart from 'react-native-restart';
 
 const STATIC_RETAILER = {
   retailerId: 'RET00001',
@@ -49,7 +51,9 @@ const STATIC_RETAILER = {
 };
 
 const ProfileScreen = () => {
-  const [retailer] = useState(STATIC_RETAILER);
+  const [retailer, setRetailer] = useState(null);
+  const [loading, setLoading] = useState(true);
+
   const [expandedSections, setExpandedSections] = useState({
     shop: false,
     address: false,
@@ -58,6 +62,45 @@ const ProfileScreen = () => {
   });
   const navigation = useNavigation();
 
+  useEffect(() => {
+    fetchRetailer();
+  }, []);
+
+  const fetchRetailer = async () => {
+    try {
+      setLoading(true);
+
+      const retailerId = await AsyncStorage.getItem('user_uuid');
+
+      console.log('📦 Retailer ID from storage:', retailerId);
+
+      if (!retailerId) {
+        setRetailer(null);
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch(
+        `https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com/retailers/${retailerId}`,
+      );
+
+      const data = await response.json();
+
+      console.log('📥 Retailer API Response:', data);
+
+      if (data?.success && data?.data) {
+        setRetailer(data.data);
+      } else {
+        setRetailer(null);
+      }
+    } catch (error) {
+      console.log('❌ Fetch Retailer Error:', error);
+      setRetailer(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const toggleSection = section => {
     setExpandedSections(prev => ({
       ...prev,
@@ -65,14 +108,30 @@ const ProfileScreen = () => {
     }));
   };
 
+  // const handleLogout = async () => {
+  //   try {
+  //     await signOut(getAuth());
+
+  //     navigation.reset({
+  //       index: 0,
+  //       routes: [{ name: 'Auth' }],
+  //     });
+  //   } catch (error) {
+  //     console.log('Logout Error:', error);
+  //   }
+  // };
   const handleLogout = async () => {
     try {
+      // 1️⃣ Firebase logout
       await signOut(getAuth());
 
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Auth' }],
-      });
+      // 2️⃣ Clear all AsyncStorage
+      await AsyncStorage.clear();
+
+      console.log('🗑️ AsyncStorage Cleared');
+
+      // 3️⃣ Restart app → Splash mounts again
+      RNRestart.restart();
     } catch (error) {
       console.log('Logout Error:', error);
     }
@@ -138,6 +197,19 @@ const ProfileScreen = () => {
     </AppView>
   );
 
+  if (loading) {
+    return (
+      <AppSafeArea style={styles.container}>
+        <Header />
+        <AppView
+          style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+        >
+          <AppText>Loading profile...</AppText>
+        </AppView>
+      </AppSafeArea>
+    );
+  }
+
   return (
     <AppSafeArea style={styles.container}>
       <Header />
@@ -166,8 +238,12 @@ const ProfileScreen = () => {
           </AppView>
 
           <AppView style={styles.profileInfo}>
-            <AppText style={styles.ownerName}>{retailer?.ownerName}</AppText>
-            <AppText style={styles.storeName}>{retailer?.storeName}</AppText>
+            <AppText style={styles.ownerName}>
+              {retailer?.ownerName || retailer?.retailerId}
+            </AppText>
+            <AppText style={styles.storeName}>
+              {retailer?.storeName || ''}
+            </AppText>
             <AppView style={styles.mobileSection}>
               <MaterialIcons
                 name="phone"

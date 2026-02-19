@@ -14,6 +14,7 @@ import {
   selectCartItemsArray,
   selectCartTotal,
 } from '../../features/cart/cartSelectors';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const useCartScreen = () => {
   const dispatch = useDispatch();
@@ -59,7 +60,8 @@ export const useCartScreen = () => {
 
   const handlePaymentMethod = async method => {
     const orderPayload = {
-      retailerId: 'RET00001', // ✅ hardcoded
+      // retailerId: 'RET00001', // ✅ hardcoded
+      retailerId: await AsyncStorage.getItem('user_uuid'),
 
       items: cartItems.map(({ product, quantity }) => ({
         productId: product.id,

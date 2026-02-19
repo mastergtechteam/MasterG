@@ -1,18 +1,23 @@
 // import React, { useEffect, useRef, useState } from 'react';
 // import {
-//   View,
 //   StyleSheet,
 //   TextInput,
 //   Image,
 //   Animated,
 //   Pressable,
 //   KeyboardAvoidingView,
+//   Platform,
+//   Text,
+//   TouchableOpacity,
 // } from 'react-native';
 
 // import AppSafeArea from '../../components/common/AppSafeArea';
 // import AppText from '../../components/common/AppText';
 // import AppButton from '../../components/common/AppButton';
 // import AppView from '../../components/common/AppView';
+
+// import { getAuth, onAuthStateChanged } from '@react-native-firebase/auth';
+// import { getConfirmation } from '../../utils/authStore';
 
 // import LinearGradient from 'react-native-linear-gradient';
 // import { colors } from '../../theme/colors';
@@ -21,11 +26,14 @@
 // export default function OtpScreen({ navigation, route }) {
 //   const { mobile } = route.params;
 
-//   const [otp, setOtp] = useState(['', '', '', '']);
+//   const confirmation = getConfirmation();
+
+//   const [otp, setOtp] = useState(['', '', '', '', '', '']);
+//   const [loading, setLoading] = useState(false);
+
 //   const inputs = useRef([]);
 //   const fadeAnim = useRef(new Animated.Value(0)).current;
 
-//   // Dark-only logo
 //   const logo = require('../../assets/images/light-logo.png');
 
 //   useEffect(() => {
@@ -34,203 +42,7 @@
 //       duration: 1200,
 //       useNativeDriver: true,
 //     }).start();
-//   }, []);
 
-//   const handleChange = (value, index) => {
-//     if (/^\d$/.test(value) || value === '') {
-//       const newOtp = [...otp];
-//       newOtp[index] = value;
-//       setOtp(newOtp);
-
-//       if (value && index < 3) {
-//         inputs.current[index + 1].focus();
-//       }
-//     }
-//   };
-
-//   const handleVerify = () => {
-//     const enteredOtp = otp.join('');
-
-//     if (enteredOtp.length !== 4) {
-//       return;
-//     }
-
-//     // navigation.reset({
-//     //   index: 0,
-//     //   routes: [{ name: 'Register' }],
-//     // });
-//     navigation.reset({
-//       index: 0,
-//       routes: [{ name: 'App' }],
-//     });
-//   };
-
-//   return (
-//     <AppSafeArea style={{ padding: spacing.lg }}>
-//       {/* Logo Section */}
-//       <KeyboardAvoidingView
-//         style={{ flex: 1 }}
-//         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-//         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-//       >
-//         <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-//           <Image source={logo} style={styles.logo} resizeMode="contain" />
-//           <LinearGradient
-//             colors={['#000000', '#FFFFFF', '#FFFFFF', '#000000']}
-//             locations={[0, 0.25, 0.5, 1]}
-//             start={{ x: 0, y: 0 }}
-//             end={{ x: 1, y: 0 }}
-//             style={styles.divider}
-//           />
-//           <AppText style={styles.subtitle}>B2B Voice Ordering Platform</AppText>
-//         </Animated.View>
-
-//         {/* OTP Card */}
-//         <AppView
-//           style={{
-//             borderWidth: 1,
-//             borderColor: colors.border,
-//             borderRadius: 14,
-//             padding: spacing.lg,
-//           }}
-//         >
-//           <AppText style={styles.title}>Enter OTP</AppText>
-
-//           <AppText style={styles.sentText}>Sent to {mobile}</AppText>
-
-//           {/* OTP Boxes */}
-//           <AppView style={styles.otpRow}>
-//             {otp.map((digit, index) => (
-//               <TextInput
-//                 key={index}
-//                 ref={ref => (inputs.current[index] = ref)}
-//                 value={digit}
-//                 onChangeText={val => handleChange(val, index)}
-//                 keyboardType="number-pad"
-//                 maxLength={1}
-//                 style={[
-//                   styles.otpBox,
-//                   {
-//                     borderColor: colors.border,
-//                     color: colors.textPrimary,
-//                   },
-//                 ]}
-//               />
-//             ))}
-//           </AppView>
-
-//           <AppButton
-//             title="Verify & Login"
-//             onPress={handleVerify}
-//             style={styles.button}
-//           />
-
-//           <Pressable onPress={() => navigation.goBack()}>
-//             <AppText style={styles.changeNumber}>Change number</AppText>
-//           </Pressable>
-//         </AppView>
-//       </KeyboardAvoidingView>
-//     </AppSafeArea>
-//   );
-// }
-// const styles = StyleSheet.create({
-//   content: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//   },
-
-//   logo: {
-//     width: 300,
-//     height: 90,
-//     marginBottom: 12,
-//   },
-
-//   subtitle: {
-//     fontSize: 14,
-//     letterSpacing: 1,
-//   },
-
-//   title: {
-//     fontSize: 20,
-//     marginBottom: 6,
-//   },
-
-//   sentText: {
-//     opacity: 0.6,
-//     marginBottom: 20,
-//     fontSize: 16,
-//   },
-
-//   otpRow: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     marginBottom: 20,
-//   },
-
-//   otpBox: {
-//     width: 46,
-//     height: 54,
-//     borderWidth: 1.5,
-//     borderRadius: 10,
-//     textAlign: 'center',
-//     fontSize: 18,
-//   },
-
-//   button: {
-//     fontSize: 16,
-//   },
-
-//   changeNumber: {
-//     textAlign: 'center',
-//     opacity: 0.8,
-//     fontSize: 16,
-//     marginVertical: 10,
-//   },
-//   divider: {
-//     width: 160,
-//     height: 1,
-//     marginBottom: 12,
-//     opacity: 0.9,
-//     transform: [{ scaleX: 0.85 }],
-//   },
-// });
-
-// import React, { useEffect, useRef, useState } from 'react';
-// import {
-//   View,
-//   StyleSheet,
-//   TextInput,
-//   Image,
-//   Animated,
-//   Pressable,
-//   KeyboardAvoidingView,
-// } from 'react-native';
-
-// import AppSafeArea from '../../components/common/AppSafeArea';
-// import AppText from '../../components/common/AppText';
-// import AppButton from '../../components/common/AppButton';
-// import AppView from '../../components/common/AppView';
-// import { getAuth, onAuthStateChanged } from '@react-native-firebase/auth';
-
-// import LinearGradient from 'react-native-linear-gradient';
-// import { colors } from '../../theme/colors';
-// import { spacing } from '../../theme/spacing';
-
-// export default function OtpScreen({ navigation, route }) {
-//   const { mobile, confirmation } = route.params;
-
-//   const [otp, setOtp] = useState(['', '', '', '', '', '']);
-
-//   const [loading, setLoading] = useState(false);
-
-//   const inputs = useRef([]);
-//   const fadeAnim = useRef(new Animated.Value(0)).current;
-
-//   // Dark-only logo
-//   const logo = require('../../assets/images/light-logo.png');
-
-//   useEffect(() => {
 //     const unsubscribe = onAuthStateChanged(getAuth(), user => {
 //       if (user) {
 //         navigation.reset({
@@ -249,12 +61,10 @@
 //       newOtp[index] = value;
 //       setOtp(newOtp);
 
-//       // Move forward
 //       if (value && index < 5) {
 //         inputs.current[index + 1].focus();
 //       }
 
-//       // Move backward on delete
 //       if (!value && index > 0) {
 //         inputs.current[index - 1].focus();
 //       }
@@ -266,14 +76,17 @@
 
 //     if (enteredOtp.length !== 6) return;
 
+//     if (!confirmation) {
+//       console.log('Confirmation object missing');
+//       return;
+//     }
+
 //     try {
 //       setLoading(true);
 
 //       const response = await confirmation.confirm(enteredOtp);
 
 //       console.log('User Verified:', response.user);
-
-//       // Navigation handled by auth listener
 //     } catch (error) {
 //       console.log('OTP Verify Error:', error);
 //     } finally {
@@ -283,7 +96,6 @@
 
 //   return (
 //     <AppSafeArea style={{ padding: spacing.lg }}>
-//       {/* Logo Section */}
 //       <KeyboardAvoidingView
 //         style={{ flex: 1 }}
 //         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -301,7 +113,6 @@
 //           <AppText style={styles.subtitle}>B2B Voice Ordering Platform</AppText>
 //         </Animated.View>
 
-//         {/* OTP Card */}
 //         <AppView
 //           style={{
 //             borderWidth: 1,
@@ -314,7 +125,6 @@
 
 //           <AppText style={styles.sentText}>Sent to {mobile}</AppText>
 
-//           {/* OTP Boxes */}
 //           <AppView style={styles.otpRow}>
 //             {otp.map((digit, index) => (
 //               <TextInput
@@ -335,11 +145,17 @@
 //             ))}
 //           </AppView>
 
-//           <AppButton
+//           {/* <AppButton
 //             title={loading ? 'Verifying...' : 'Verify & Login'}
 //             onPress={handleVerify}
 //             style={styles.button}
-//           />
+//           /> */}
+
+//           <TouchableOpacity style={styles.OtpButton} onPress={handleVerify}>
+//             <Text style={styles.OtpButtonTextSelected}>
+//               {loading ? 'Verifying...' : 'Verify & Login'}
+//             </Text>
+//           </TouchableOpacity>
 
 //           <Pressable onPress={() => navigation.goBack()}>
 //             <AppText style={styles.changeNumber}>Change number</AppText>
@@ -385,8 +201,8 @@
 //   },
 
 //   otpBox: {
-//     width: 46,
-//     height: 54,
+//     width: 40,
+//     height: 50,
 //     borderWidth: 1.5,
 //     borderRadius: 10,
 //     textAlign: 'center',
@@ -410,7 +226,23 @@
 //     opacity: 0.9,
 //     transform: [{ scaleX: 0.85 }],
 //   },
+//   OtpButton: {
+//     paddingVertical: 16,
+//     paddingHorizontal: 10,
+//     borderRadius: 10,
+//     borderWidth: 1,
+//     borderColor: colors.border,
+//     backgroundColor: colors.white,
+//     alignItems: 'center',
+//     marginBottom: 10,
+//   },
+//   OtpButtonTextSelected: {
+//     color: '#000000',
+//     fontSize: 18,
+//     fontWeight: '600',
+//   },
 // });
+
 import React, { useEffect, useRef, useState } from 'react';
 import {
   StyleSheet,
@@ -420,6 +252,8 @@ import {
   Pressable,
   KeyboardAvoidingView,
   Platform,
+  TouchableOpacity,
+  Text,
 } from 'react-native';
 
 import AppSafeArea from '../../components/common/AppSafeArea';
@@ -433,6 +267,7 @@ import { getConfirmation } from '../../utils/authStore';
 import LinearGradient from 'react-native-linear-gradient';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function OtpScreen({ navigation, route }) {
   const { mobile } = route.params;
@@ -448,12 +283,19 @@ export default function OtpScreen({ navigation, route }) {
   const logo = require('../../assets/images/light-logo.png');
 
   useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 1200,
+      useNativeDriver: true,
+    }).start();
+
     const unsubscribe = onAuthStateChanged(getAuth(), user => {
       if (user) {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'App' }],
-        });
+        // navigation.reset({
+        //   index: 0,
+        //   routes: [{ name: 'App' }],
+        // });
+        navigation.navigate('GetLocation');
       }
     });
 
@@ -492,12 +334,140 @@ export default function OtpScreen({ navigation, route }) {
       const response = await confirmation.confirm(enteredOtp);
 
       console.log('User Verified:', response.user);
+
+      const uuid = response?.user?._user?.uid;
+      const mobileNumber = response?.user?.phoneNumber; // Firebase phone number
+      await AsyncStorage.setItem('user_uuid', uuid);
+      await AsyncStorage.setItem('user_mobile', mobileNumber);
+
+      // console.log('Stored UUID:', uuid);
+      // console.log('Stored Mobile:', mobileNumber);
+
+      // 🔹 Log all AsyncStorage data
+      const keys = await AsyncStorage.getAllKeys();
+      const items = await AsyncStorage.multiGet(keys);
+
+      console.log('All AsyncStorage Data:', items);
+
+      await ensureRetailerExists();
     } catch (error) {
       console.log('OTP Verify Error:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  // async function ensureRetailerExists(id) {
+  //   const baseUrl =
+  //     'https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com/retailers';
+
+  //   try {
+  //     console.log('🔍 Checking retailer with ID:', id);
+
+  //     // 1️⃣ Check if retailer exists
+  //     const checkResponse = await fetch(`${baseUrl}/${id}`, {
+  //       method: 'GET',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //     });
+
+  //     const checkData = await checkResponse.json();
+  //     console.log('📥 Check response:', checkData);
+
+  //     // 2️⃣ If retailer not found → Create retailer
+  //     if (!checkData.success && checkData.message === 'Retailer not found') {
+  //       console.log('⚠️ Retailer not found. Creating retailer...');
+
+  //       const createResponse = await fetch(baseUrl, {
+  //         method: 'POST',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //         body: JSON.stringify({
+  //           retailerId: id,
+  //           contact: {
+  //             mobile: '9876543210',
+  //           },
+  //           status: 'ACTIVE',
+  //         }),
+  //       });
+
+  //       const createData = await createResponse.json();
+  //       console.log('✅ Create response:', createData);
+
+  //       return createData;
+  //     }
+
+  //     console.log('✅ Retailer already exists.');
+  //     return checkData;
+  //   } catch (error) {
+  //     console.error('❌ Error:', error);
+  //     throw error;
+  //   }
+  // }
+
+  async function ensureRetailerExists() {
+    const baseUrl =
+      'https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com/retailers';
+
+    try {
+      // 🔹 Get data from AsyncStorage
+      const uuid = await AsyncStorage.getItem('user_uuid');
+      const mobileNumber = await AsyncStorage.getItem('user_mobile');
+
+      console.log('📦 UUID from storage:', uuid);
+      console.log('📦 Mobile from storage:', mobileNumber);
+
+      if (!uuid) {
+        console.log('❌ UUID not found in storage');
+        return;
+      }
+
+      console.log('🔍 Checking retailer with ID:', uuid);
+
+      // 1️⃣ Check if retailer exists
+      const checkResponse = await fetch(`${baseUrl}/${uuid}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const checkData = await checkResponse.json();
+      console.log('📥 Check response:', checkData);
+
+      // 2️⃣ If retailer not found → Create retailer
+      if (!checkData.success && checkData.message === 'Retailer not found') {
+        console.log('⚠️ Retailer not found. Creating retailer...');
+
+        const createResponse = await fetch(baseUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            retailerId: uuid,
+            contact: {
+              mobile: mobileNumber, // 🔹 from AsyncStorage
+            },
+            status: 'ACTIVE',
+          }),
+        });
+
+        const createData = await createResponse.json();
+        console.log('✅ Create response:', createData);
+
+        return createData;
+      }
+
+      console.log('✅ Retailer already exists.');
+      return checkData;
+    } catch (error) {
+      console.error('❌ Error:', error);
+      throw error;
+    }
+  }
 
   return (
     <AppSafeArea style={{ padding: spacing.lg }}>
@@ -550,11 +520,11 @@ export default function OtpScreen({ navigation, route }) {
             ))}
           </AppView>
 
-          <AppButton
-            title={loading ? 'Verifying...' : 'Verify & Login'}
-            onPress={handleVerify}
-            style={styles.button}
-          />
+          <TouchableOpacity style={styles.OtpButton} onPress={handleVerify}>
+            <Text style={styles.OtpButtonTextSelected}>
+              {loading ? 'Verifying...' : 'Verify & Login'}
+            </Text>
+          </TouchableOpacity>
 
           <Pressable onPress={() => navigation.goBack()}>
             <AppText style={styles.changeNumber}>Change number</AppText>
@@ -600,8 +570,8 @@ const styles = StyleSheet.create({
   },
 
   otpBox: {
-    width: 46,
-    height: 54,
+    width: 40,
+    height: 48,
     borderWidth: 1.5,
     borderRadius: 10,
     textAlign: 'center',
@@ -624,5 +594,20 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     opacity: 0.9,
     transform: [{ scaleX: 0.85 }],
+  },
+  OtpButton: {
+    paddingVertical: 16,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.white,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  OtpButtonTextSelected: {
+    color: '#000000',
+    fontSize: 18,
+    fontWeight: '600',
   },
 });

@@ -483,6 +483,8 @@ import {
   Animated,
   KeyboardAvoidingView,
   Platform,
+  TouchableOpacity,
+  Text,
 } from 'react-native';
 
 import AppSafeArea from '../../components/common/AppSafeArea';
@@ -587,7 +589,7 @@ export default function LoginScreen({ navigation }) {
             />
           </AppView>
 
-          <AppButton
+          {/* <AppButton
             title={loading ? 'Sending...' : 'Get OTP'}
             onPress={handleGetOtp}
             style={styles.button}
@@ -597,7 +599,20 @@ export default function LoginScreen({ navigation }) {
             title="Skip"
             onPress={() => navigation.navigate('App')}
             style={styles.button}
-          />
+          /> */}
+
+          <TouchableOpacity style={styles.OtpButton} onPress={handleGetOtp}>
+            <Text style={styles.OtpButtonTextSelected}>
+              {loading ? 'Sending...' : 'Get OTP'}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.languageButton}
+            onPress={() => navigation.navigate('App')}
+          >
+            <Text style={styles.languageButtonText}>Skip</Text>
+          </TouchableOpacity>
         </AppView>
       </KeyboardAvoidingView>
     </AppSafeArea>
@@ -656,5 +671,43 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     opacity: 0.9,
     transform: [{ scaleX: 0.85 }],
+  },
+
+  languageButton: {
+    paddingVertical: 16,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: 'transparent',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  OtpButton: {
+    paddingVertical: 16,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.white,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+
+  languageButtonSelected: {
+    backgroundColor: colors.white,
+    borderColor: colors.white,
+  },
+
+  languageButtonText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.white,
+  },
+
+  OtpButtonTextSelected: {
+    color: '#000000',
+    fontSize: 18,
+    fontWeight: '600',
   },
 });

@@ -13,8 +13,9 @@ import AppView from '../../components/common/AppView';
 import AppText from '../../components/common/AppText';
 import Header from '../../components/common/Header';
 import { colors } from '../../theme/colors';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const RETAILER_ID = 'RET00001';
+// const RETAILER_ID = 'RET00001';
 
 const OrdersScreen = () => {
   const [orders, setOrders] = useState([]);
@@ -22,25 +23,54 @@ const OrdersScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [expandedOrders, setExpandedOrders] = useState({});
   const [orderDetails, setOrderDetails] = useState({});
+  const [retailerId, setRetailerId] = useState(null);
 
   useEffect(() => {
-    fetchOrders();
+    loadRetailerAndOrders();
   }, []);
 
-  const fetchOrders = async () => {
-    setLoading(true);
+  const loadRetailerAndOrders = async () => {
+    try {
+      setLoading(true);
+
+      const storedId = await AsyncStorage.getItem('user_uuid');
+
+      console.log('📦 Retailer ID from storage:', storedId);
+
+      if (!storedId) {
+        setOrders([]);
+        setLoading(false);
+        return;
+      }
+
+      setRetailerId(storedId);
+      await fetchOrders(storedId);
+    } catch (error) {
+      console.log('Init Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchOrders = async (id = retailerId) => {
+    if (!id) return;
+
     try {
       const res = await fetch(
-        `https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com/api/v1/order?retailerId=${RETAILER_ID}`,
+        `https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com/api/v1/order?retailerId=${id}`,
       );
+
       const json = await res.json();
+
       if (json.success) {
         setOrders(json.data);
+      } else {
+        setOrders([]);
       }
     } catch (err) {
       console.log('Fetch Orders Error:', err);
+      setOrders([]);
     }
-    setLoading(false);
   };
 
   const fetchOrderDetails = async orderId => {
