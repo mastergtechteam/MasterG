@@ -1,4 +1,4 @@
-const BASE_URL = 'https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com';
+const BASE_URL = 'https://uqlzs7e7wj.execute-api.ap-south-1.amazonaws.com';
 
 export const apiGet = async (endpoint, params = {}) => {
   const query = new URLSearchParams(params).toString();
