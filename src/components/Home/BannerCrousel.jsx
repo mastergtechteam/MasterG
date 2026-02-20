@@ -67,7 +67,7 @@
 //     try {
 //       setLoading(true);
 //       const response = await fetch(
-//         'https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com/deals',
+//         `${BASE_URL}/deals`,
 //       );
 //       const json = await response.json();
 //       setDeals(json);
@@ -223,6 +223,7 @@ const { width } = Dimensions.get('window');
 import { colors } from '../../theme/colors';
 import LinearGradient from 'react-native-linear-gradient';
 import Loader from '../common/Loader';
+import { BASE_URL } from '../../api/apiClient';
 
 const BannerItem = ({ item, handleEnrollPress, handleDemo }) => {
   return (
@@ -273,12 +274,16 @@ const BannerCarousel = () => {
   // ];
 
   const fetchBanners = async () => {
+    const TAG = '[API:Banner]';
+    const url = `${BASE_URL}/deals`;
+    console.log(TAG, `▶ GET ${url}`);
+    const start = Date.now();
     try {
       setLoading(true);
-      const response = await fetch(
-        'https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com/deals',
-      );
+      const response = await fetch(url);
+      console.log(TAG, `⏱ ${Date.now() - start}ms | status: ${response.status}`);
       const json = await response.json();
+      console.log(TAG, `✅ ${json?.length ?? 0} deals fetched`);
 
       // ✅ Filter only isBanner true
       const bannerDeals = json
@@ -289,11 +294,11 @@ const BannerCarousel = () => {
           subtitle: item.subheading,
           image: { uri: item.photo }, // ✅ Use API image
         }));
-      console.log(json);
+      console.log(TAG, `🖼 ${bannerDeals.length} banners after filter`);
 
       setBanner(bannerDeals);
     } catch (error) {
-      console.error('Error fetching banners:', error);
+      console.error(TAG, `❌ Error: ${error.message}`);
     } finally {
       setLoading(false);
     }

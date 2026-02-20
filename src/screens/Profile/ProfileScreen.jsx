@@ -21,6 +21,7 @@ import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BASE_URL } from '../../api/apiClient';
 import RNRestart from 'react-native-restart';
 
 const STATIC_RETAILER = {
@@ -80,21 +81,23 @@ const ProfileScreen = () => {
         return;
       }
 
-      const response = await fetch(
-        `https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com/retailers/${retailerId}`,
-      );
-
+      const TAG = '[API:Profile]';
+      const url = `${BASE_URL}/retailers/${retailerId}`;
+      console.log(TAG, `▶ GET ${url}`);
+      const start = Date.now();
+      const response = await fetch(url);
+      console.log(TAG, `⏱ ${Date.now() - start}ms | status: ${response.status}`);
       const data = await response.json();
 
-      console.log('📥 Retailer API Response:', data);
-
       if (data?.success && data?.data) {
+        console.log(TAG, `✅ Retailer loaded: ${data.data?.storeName}`);
         setRetailer(data.data);
       } else {
+        console.warn(TAG, `⚠️ Retailer not found for id: ${retailerId}`);
         setRetailer(null);
       }
     } catch (error) {
-      console.log('❌ Fetch Retailer Error:', error);
+      console.error('[API:Profile]', `❌ Fetch Retailer Error: ${error.message}`);
       setRetailer(null);
     } finally {
       setLoading(false);

@@ -5,9 +5,10 @@ import SectionHeader from './SectionHeader';
 import CategorieCard from './CategorieCard';
 import { useNavigation } from '@react-navigation/native';
 import Loader from '../common/Loader';
+import { BASE_URL } from '../../api/apiClient';
 
 const API_URL =
-  'https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com/categories'; // 👈 replace this
+  `${BASE_URL}/categories`; // 👈 replace this
 
 const CategoriesSection = () => {
   const [categories, setCategories] = useState([]);
@@ -19,9 +20,13 @@ const CategoriesSection = () => {
   }, []);
 
   const fetchCategories = async () => {
+    const TAG = '[API:Categories]';
+    console.log(TAG, `▶ GET ${API_URL}`);
+    const start = Date.now();
     try {
       setLoading(true);
       const response = await fetch(API_URL);
+      console.log(TAG, `⏱ ${Date.now() - start}ms | status: ${response.status}`);
       const json = await response.json();
 
       if (json?.success && Array.isArray(json.data)) {
@@ -32,11 +37,11 @@ const CategoriesSection = () => {
             title: item.name,
             image: { uri: item.image },
           }));
-
+        console.log(TAG, `✅ ${formattedData.length} categories loaded`);
         setCategories(formattedData);
       }
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error(TAG, `❌ Error: ${error.message}`);
     } finally {
       setLoading(false);
     }

@@ -26,6 +26,7 @@ import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 import GoBackHeader from '../../components/common/GoBackHeader';
 import AppSafeArea from '../../components/common/AppSafeArea';
+import { BASE_URL } from '../../api/apiClient';
 
 const { width: screenWidth } = Dimensions.get('window');
 const IMAGE_WIDTH = screenWidth;
@@ -52,18 +53,23 @@ const ProductsDetailsScreen = () => {
     if (!productId) return;
 
     const fetchProduct = async () => {
+      const TAG = '[API:ProductDetails]';
+      const url = `${BASE_URL}/products/${productId}`;
+      console.log(TAG, `▶ GET ${url}`);
+      const start = Date.now();
       try {
-        const response = await fetch(
-          `https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com/products/${productId}`,
-        );
+        const response = await fetch(url);
+        console.log(TAG, `⏱ ${Date.now() - start}ms | status: ${response.status}`);
         const json = await response.json();
-        console.log(json.data);
 
         if (json.success) {
+          console.log(TAG, `✅ Product loaded: ${json.data?.name}`);
           setProduct(json.data);
+        } else {
+          console.warn(TAG, `⚠️ Product not found for id: ${productId}`);
         }
       } catch (error) {
-        console.error('Error fetching product:', error);
+        console.error(TAG, `❌ Error: ${error.message}`);
       } finally {
         setLoading(false);
       }

@@ -18,6 +18,7 @@ import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 import { selectCartItemsArray } from '../../features/cart/cartSelectors';
+import { BASE_URL } from '../../api/apiClient';
 import { Dimensions } from 'react-native';
 
 const { width } = Dimensions.get('window');
@@ -46,31 +47,32 @@ const DealProductsScreen = () => {
   }, [productIds]);
 
   const fetchProducts = async () => {
+    const TAG = '[API:DealProducts]';
+    const url = `${BASE_URL}/products/batch`;
+    console.log(TAG, `▶ POST ${url}`, { productIds });
+    const start = Date.now();
     try {
       setLoading(true);
       setError(false);
 
-      const response = await fetch(
-        'https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com/products/batch',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ productIds }),
-        },
-      );
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productIds }),
+      });
 
+      console.log(TAG, `⏱ ${Date.now() - start}ms | status: ${response.status}`);
       const result = await response.json();
-      console.log('Products API response:', result.data);
 
       if (result?.success) {
+        console.log(TAG, `✅ ${result.data?.length ?? 0} products fetched`);
         setProducts(result.data || []);
       } else {
+        console.warn(TAG, `⚠️ API returned success: false`);
         setProducts([]);
       }
     } catch (err) {
-      console.error('Error fetching products:', err);
+      console.error(TAG, `❌ Error: ${err.message}`);
       setError(true);
     } finally {
       setLoading(false);

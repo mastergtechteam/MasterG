@@ -268,6 +268,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BASE_URL } from '../../api/apiClient';
 
 export default function OtpScreen({ navigation, route }) {
   const { mobile } = route.params;
@@ -359,14 +360,13 @@ export default function OtpScreen({ navigation, route }) {
 
   // async function ensureRetailerExists(id) {
   //   const baseUrl =
-  //     'https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com/retailers';
+  //     `${BASE_URL}/retailers`;
 
   //   try {
   //     console.log('🔍 Checking retailer with ID:', id);
 
   //     // 1️⃣ Check if retailer exists
   //     const checkResponse = await fetch(`${baseUrl}/${id}`, {
-  //       method: 'GET',
   //       headers: {
   //         'Content-Type': 'application/json',
   //       },
@@ -408,63 +408,60 @@ export default function OtpScreen({ navigation, route }) {
   // }
 
   async function ensureRetailerExists() {
+    const TAG = '[API:OTP]';
     const baseUrl =
-      'https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com/retailers';
+      `${BASE_URL}/retailers`;
 
     try {
-      // 🔹 Get data from AsyncStorage
       const uuid = await AsyncStorage.getItem('user_uuid');
       const mobileNumber = await AsyncStorage.getItem('user_mobile');
 
-      console.log('📦 UUID from storage:', uuid);
-      console.log('📦 Mobile from storage:', mobileNumber);
+      console.log(TAG, '📦 UUID:', uuid);
+      console.log(TAG, '📦 Mobile:', mobileNumber);
 
       if (!uuid) {
-        console.log('❌ UUID not found in storage');
+        console.warn(TAG, '❌ UUID not found in storage');
         return;
       }
 
-      console.log('🔍 Checking retailer with ID:', uuid);
-
       // 1️⃣ Check if retailer exists
+      console.log(TAG, `▶ GET ${baseUrl}/${uuid}`);
+      let start = Date.now();
       const checkResponse = await fetch(`${baseUrl}/${uuid}`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
       });
-
       const checkData = await checkResponse.json();
-      console.log('📥 Check response:', checkData);
+      console.log(TAG, `⏱ Check — ${Date.now() - start}ms | status: ${checkResponse.status}`);
+      console.log(TAG, '📩 Check response:', JSON.stringify(checkData, null, 2));
 
-      // 2️⃣ If retailer not found → Create retailer
+      // 2️⃣ If not found → Create retailer
       if (!checkData.success && checkData.message === 'Retailer not found') {
-        console.log('⚠️ Retailer not found. Creating retailer...');
+        console.log(TAG, '⚠️ Retailer not found — creating...');
+        const body = {
+          retailerId: uuid,
+          contact: { mobile: mobileNumber },
+          status: 'ACTIVE',
+        };
+        console.log(TAG, '▶ POST retailers:', JSON.stringify(body, null, 2));
+        start = Date.now();
 
         const createResponse = await fetch(baseUrl, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            retailerId: uuid,
-            contact: {
-              mobile: mobileNumber, // 🔹 from AsyncStorage
-            },
-            status: 'ACTIVE',
-          }),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
         });
 
         const createData = await createResponse.json();
-        console.log('✅ Create response:', createData);
-
+        console.log(TAG, `⏱ Create — ${Date.now() - start}ms | status: ${createResponse.status}`);
+        console.log(TAG, '📩 Create response:', JSON.stringify(createData, null, 2));
         return createData;
       }
 
-      console.log('✅ Retailer already exists.');
+      console.log(TAG, '✅ Retailer already exists');
       return checkData;
     } catch (error) {
-      console.error('❌ Error:', error);
+      console.error(TAG, '❌ Error:', error.message);
       throw error;
     }
   }

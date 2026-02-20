@@ -17,6 +17,7 @@ import CategoriesSection from '../../components/Home/CategoriesSection';
 import ProductCard from '../../components/Product/ProductCard';
 import { useSelector } from 'react-redux';
 import { selectCartItemsArray } from '../../features/cart/cartSelectors';
+import { BASE_URL } from '../../api/apiClient';
 
 const SearchScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -55,23 +56,22 @@ const SearchScreen = ({ navigation }) => {
 
   const handleSearchSubmit = async query => {
     if (!query.trim()) return;
-
+    const TAG = '[API:Search]';
+    const url = `${BASE_URL}/search?q=${query}`;
+    console.log(TAG, `▶ GET ${url}`);
+    const start = Date.now();
     try {
       setLoading(true);
       setHasSearched(true);
 
-      const response = await fetch(
-        `https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com/search?q=${query}`,
-      );
-
+      const response = await fetch(url);
+      console.log(TAG, `⏱ ${Date.now() - start}ms | status: ${response.status}`);
       const data = await response.json();
+      console.log(TAG, `✅ ${data?.data?.length ?? 0} results for "${query}"`);
 
-      // If API returns array directly
-      // setSearchResults(Array.isArray(data) ? data : data?.products || []);
       setSearchResults(data?.data);
-      console.log(data?.data);
     } catch (error) {
-      console.log('Search Error:', error);
+      console.error(TAG, `❌ Error: ${error.message}`);
       setSearchResults([]);
     } finally {
       setLoading(false);

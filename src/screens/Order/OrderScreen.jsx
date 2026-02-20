@@ -14,6 +14,7 @@ import AppText from '../../components/common/AppText';
 import Header from '../../components/common/Header';
 import { colors } from '../../theme/colors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BASE_URL } from '../../api/apiClient';
 
 // const RETAILER_ID = 'RET00001';
 
@@ -54,21 +55,24 @@ const OrdersScreen = () => {
 
   const fetchOrders = async (id = retailerId) => {
     if (!id) return;
-
+    const TAG = '[API:Orders]';
+    const url = `${BASE_URL}/api/v1/order?retailerId=${id}`;
+    console.log(TAG, `▶ GET ${url}`);
+    const start = Date.now();
     try {
-      const res = await fetch(
-        `https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com/api/v1/order?retailerId=${id}`,
-      );
-
+      const res = await fetch(url);
+      console.log(TAG, `⏱ ${Date.now() - start}ms | status: ${res.status}`);
       const json = await res.json();
 
       if (json.success) {
+        console.log(TAG, `✅ ${json.data?.length ?? 0} orders fetched`);
         setOrders(json.data);
       } else {
+        console.warn(TAG, `⚠️ No orders returned`);
         setOrders([]);
       }
     } catch (err) {
-      console.log('Fetch Orders Error:', err);
+      console.error(TAG, `❌ Fetch Orders Error: ${err.message}`);
       setOrders([]);
     }
   };
@@ -78,18 +82,23 @@ const OrdersScreen = () => {
       toggleOrderExpand(orderId);
       return;
     }
-
+    const TAG = '[API:OrderDetails]';
+    const url = `${BASE_URL}/api/v1/order/${orderId}`;
+    console.log(TAG, `▶ GET ${url}`);
+    const start = Date.now();
     try {
-      const res = await fetch(
-        `https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com/api/v1/order/${orderId}`,
-      );
+      const res = await fetch(url);
+      console.log(TAG, `⏱ ${Date.now() - start}ms | status: ${res.status}`);
       const json = await res.json();
       if (json.success) {
+        console.log(TAG, `✅ Details loaded for order: ${orderId}`);
         setOrderDetails(prev => ({ ...prev, [orderId]: json.data }));
         toggleOrderExpand(orderId);
+      } else {
+        console.warn(TAG, `⚠️ Details not found for order: ${orderId}`);
       }
     } catch (err) {
-      console.log('Details Error:', err);
+      console.error(TAG, `❌ Details Error: ${err.message}`);
     }
   };
 

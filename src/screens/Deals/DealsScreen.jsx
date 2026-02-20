@@ -28,7 +28,7 @@
 //     try {
 //       setLoading(true);
 //       const response = await fetch(
-//         'https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com/deals',
+//         `${BASE_URL}/deals`,
 //       );
 //       const json = await response.json();
 //       setDeals(json);
@@ -127,6 +127,7 @@ import { useNavigation } from '@react-navigation/native';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 import GoBackHeader from '../../components/common/GoBackHeader';
+import { BASE_URL } from '../../api/apiClient';
 const DealsScreen = () => {
   const navigation = useNavigation();
   const [deals, setDeals] = useState([]);
@@ -136,19 +137,21 @@ const DealsScreen = () => {
   }, []);
 
   const fetchDeals = async () => {
+    const TAG = '[API:Deals]';
+    const url = `${BASE_URL}/deals`;
+    console.log(TAG, `▶ GET ${url}`);
+    const start = Date.now();
     try {
       setLoading(true);
-      const response = await fetch(
-        'https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com/deals',
-      );
+      const response = await fetch(url);
+      console.log(TAG, `⏱ ${Date.now() - start}ms | status: ${response.status}`);
       const json = await response.json();
+      console.log(TAG, `✅ ${json?.length ?? 0} deals fetched`);
       setDeals(json);
-      // console.log(json, 'abc');
-    } catch {
-      console.error('Error fetching product:', error);
+    } catch (error) {
+      console.error(TAG, `❌ Error: ${error.message}`);
     } finally {
       setLoading(false);
-      // console.log('api request done');
     }
   };
 

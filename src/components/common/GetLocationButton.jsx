@@ -14,7 +14,7 @@ import {
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import Geolocation from '@react-native-community/geolocation';
 
-const TAG = '[Location]';
+const TAG = '[API:Location]';
 
 const GetLocationButton = ({ onLocationFetched }) => {
   const [loading, setLoading] = useState(false);
@@ -81,18 +81,20 @@ const GetLocationButton = ({ onLocationFetched }) => {
      REVERSE GEOCODING
   ====================== */
   const reverseGeocode = async (lat, lng) => {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
+    console.log(TAG, `▶ GET ${url}`);
+    const start = Date.now();
     try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
-        {
-          headers: {
-            'User-Agent': 'RetailerApp/1.0 (support@company.com)',
-            Accept: 'application/json',
-          },
+      const res = await fetch(url, {
+        headers: {
+          'User-Agent': 'RetailerApp/1.0 (support@company.com)',
+          Accept: 'application/json',
         },
-      );
+      });
+      console.log(TAG, `⏱ ${Date.now() - start}ms | status: ${res.status}`);
       const data = await res.json();
       const addr = data.address || {};
+      console.log(TAG, `✅ Geocode resolved — city: ${addr.city || addr.town || ''}, pincode: ${addr.postcode || ''}`);
       return {
         lat: lat.toString(),
         lng: lng.toString(),
@@ -112,7 +114,8 @@ const GetLocationButton = ({ onLocationFetched }) => {
         state: addr.state || addr.city || '',
         pincode: addr.postcode || '',
       };
-    } catch {
+    } catch (error) {
+      console.error(TAG, `❌ Geocode error: ${error.message}`);
       return null;
     }
   };

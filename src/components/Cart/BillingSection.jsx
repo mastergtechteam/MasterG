@@ -25,12 +25,16 @@ const BillingSection = ({
       }
     >
       <View style={styles.billingDetails}>
-        <Text style={styles.billingName}>{billingAddress.name}</Text>
-        <Text style={styles.billingText}>{billingAddress.phone}</Text>
-        <Text style={styles.billingText}>{billingAddress.email}</Text>
-        <Text style={styles.billingAddress}>{billingAddress.address}</Text>
-        <Text style={styles.billingAddress}>{billingAddress.city}</Text>
-        <Text style={styles.billingZip}>{billingAddress.zipCode}</Text>
+        {billingAddress ? (
+          <>
+            <Text style={styles.billingAddress}>{billingAddress.area}</Text>
+            <Text style={styles.billingAddress}>{billingAddress.city}</Text>
+            <Text style={styles.billingAddress}>{billingAddress.state}</Text>
+            <Text style={styles.billingZip}>{billingAddress.pincode}</Text>
+          </>
+        ) : (
+          <Text style={styles.billingText}>No address saved. Please auto-fetch location first.</Text>
+        )}
       </View>
     </ExpandableSection>
   );

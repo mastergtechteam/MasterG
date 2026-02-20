@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
+import { BASE_URL } from '../../api/apiClient';
 
 import Header from '../../components/common/Header';
 import RetailerInput from '../../components/common/RetailerInput';
@@ -24,7 +25,7 @@ import GetLocationButton from '../../components/common/GetLocationButton';
 import UploadImageBtn from '../../components/common/UploadImageButton';
 
 const API_URL =
-  'https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com/retailers';
+  `${BASE_URL}/retailers`;
 
 /* =====================
    HELPERS
@@ -121,6 +122,7 @@ const AddRetailerScreen = () => {
       return;
     }
 
+    const TAG = '[API:Register]';
     try {
       setLoading(true);
 
@@ -145,6 +147,9 @@ const AddRetailerScreen = () => {
         status: 'ACTIVE',
       };
 
+      console.log(TAG, '▶ Submitting retailer:', JSON.stringify(payload, null, 2));
+      const start = Date.now();
+
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
@@ -152,6 +157,8 @@ const AddRetailerScreen = () => {
         },
         body: JSON.stringify(payload),
       });
+
+      console.log(TAG, `⏱ Response — ${Date.now() - start}ms | status: ${response.status}`);
 
       const text = await response.text();
       let json;
@@ -162,8 +169,10 @@ const AddRetailerScreen = () => {
         throw new Error('Invalid server response');
       }
 
+      console.log(TAG, '📩 Response body:', JSON.stringify(json, null, 2));
+
       if (response.ok) {
-        console.log('RESPONSE 👉', response);
+        console.log(TAG, '✅ Retailer created successfully');
         showToast('Account created successfully ✅');
 
         // navigation.reset({
@@ -171,10 +180,11 @@ const AddRetailerScreen = () => {
         //   routes: [{ name: 'App' }],
         // });
       } else {
+        console.warn(TAG, `❌ Failed — status: ${response.status}`);
         showToast(json?.message || 'Failed to create account');
       }
     } catch (err) {
-      console.log('ADD RETAILER ERROR 👉', err);
+      console.error(TAG, '❌ Error:', err.message);
 
       if (err.message === 'Network request failed') {
         showToast('Network error. Please check internet');

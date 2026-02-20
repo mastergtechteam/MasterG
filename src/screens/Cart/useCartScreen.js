@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Alert } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
@@ -15,6 +15,7 @@ import {
   selectCartTotal,
 } from '../../features/cart/cartSelectors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BASE_URL } from '../../api/apiClient';
 
 export const useCartScreen = () => {
   const dispatch = useDispatch();
@@ -49,19 +50,21 @@ export const useCartScreen = () => {
   const taxAmount = Math.round(total * TAX_RATE);
   const finalTotal = total + SHIPPING_CHARGE + taxAmount;
 
-  const billingAddress = {
-    name: 'John Doe',
-    phone: '+91 98765 43210',
-    email: 'john.doe@example.com',
-    address: '123 Green Street, Eco Park',
-    city: 'Mumbai, Maharashtra',
-    zipCode: '400 001',
-  };
+  const [billingAddress, setBillingAddress] = useState(null);
+
+  useEffect(() => {
+    const loadAddress = async () => {
+      const storedAddress = await AsyncStorage.getItem('address');
+      if (storedAddress) setBillingAddress(JSON.parse(storedAddress));
+    };
+    loadAddress();
+  }, []);
 
   const handlePaymentMethod = async method => {
+    const retailerId = await AsyncStorage.getItem('user_uuid');
+
     const orderPayload = {
-      // retailerId: 'RET00001', // ✅ hardcoded
-      retailerId: await AsyncStorage.getItem('user_uuid'),
+      retailerId,
 
       items: cartItems.map(({ product, quantity }) => ({
         productId: product.id,
@@ -87,15 +90,18 @@ export const useCartScreen = () => {
         expectedDeliveryTime: new Date(
           Date.now() + 3 * 24 * 60 * 60 * 1000,
         ).toISOString(), // +3 days
+        address: billingAddress,
       },
     };
 
-    // ✅ Console original object
-    console.log('ORDER PAYLOAD:', orderPayload);
+    const TAG = '[API:Order]';
+    console.log(TAG, '▶ Placing order...');
+    console.log(TAG, '📦 Payload:', JSON.stringify(orderPayload, null, 2));
 
+    const start = Date.now();
     try {
       const response = await fetch(
-        'https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com/api/v1/order',
+        `${BASE_URL}/api/v1/order`,
         {
           method: 'POST',
           headers: {
@@ -104,21 +110,21 @@ export const useCartScreen = () => {
           body: JSON.stringify(orderPayload),
         },
       );
+      console.log(TAG, `⏱ Response received — ${Date.now() - start}ms`);
+      console.log(TAG, `📡 Status: ${response.status}`);
 
-      const text = await response.text(); // safer than response.json()
-
+      const text = await response.text();
       let data;
       try {
         data = text ? JSON.parse(text) : {};
       } catch (e) {
         data = {};
       }
-
-      console.log('STATUS:', response.status);
-      console.log('API RESPONSE:', data);
+      console.log(TAG, '📩 Response body:', JSON.stringify(data, null, 2));
 
       if (response.status >= 200 && response.status < 300) {
-        dispatch(clearCart()); // empty cart
+        console.log(TAG, '✅ Order placed successfully');
+        dispatch(clearCart());
         setModalVisible(false);
         setOrderConfirmationVisible(false);
         setOrderPlaced(true);
@@ -131,13 +137,14 @@ export const useCartScreen = () => {
           });
         }, 3000);
       } else {
+        console.warn(TAG, `❌ Order failed — status: ${response.status}`);
         Alert.alert(
           'Order Failed',
           data?.message || `Server error (${response.status})`,
         );
       }
     } catch (error) {
-      console.log('ORDER ERROR:', error);
+      console.error(TAG, `❌ Network error — ${Date.now() - start}ms`, error.message);
       Alert.alert('Network Error', 'Please check your internet connection.');
     }
   };
