@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -23,9 +23,6 @@ import RetailerInput from '../../components/common/RetailerInput';
 import TypeDropdown from '../../components/common/TypeDropdown';
 import GetLocationButton from '../../components/common/GetLocationButton';
 import UploadImageBtn from '../../components/common/UploadImageButton';
-
-const API_URL =
-  `${BASE_URL}/retailers`;
 
 /* =====================
    HELPERS
@@ -86,7 +83,7 @@ const validateForm = (formData, images) => {
 
 const AddRetailerScreen = () => {
   const navigation = useNavigation();
-
+  const [initialLoading, setInitialLoading] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
     mobile: '',
@@ -108,6 +105,10 @@ const AddRetailerScreen = () => {
   const [loading, setLoading] = useState(false);
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
 
+  useEffect(() => {
+    fetchRetailerDetails();
+  }, []);
+
   const retailerTypes = [
     { label: 'Kirana', value: 'kirana' },
     { label: 'Grocery', value: 'grocery' },
@@ -125,6 +126,12 @@ const AddRetailerScreen = () => {
     const TAG = '[API:Register]';
     try {
       setLoading(true);
+      const retailerId = await AsyncStorage.getItem('user_uuid');
+
+      if (!retailerId) {
+        showToast('Something went wrong. Please login again.');
+        return;
+      }
 
       const payload = {
         storeName: formData.shop_name,
@@ -147,18 +154,25 @@ const AddRetailerScreen = () => {
         status: 'ACTIVE',
       };
 
-      console.log(TAG, '▶ Submitting retailer:', JSON.stringify(payload, null, 2));
+      console.log(
+        TAG,
+        '▶ Submitting retailer:',
+        JSON.stringify(payload, null, 2),
+      );
       const start = Date.now();
 
-      const response = await fetch(API_URL, {
-        method: 'POST',
+      const response = await fetch(`${BASE_URL}/retailers/${retailerId}`, {
+        method: 'PUT', // 🔥 IMPORTANT
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
       });
 
-      console.log(TAG, `⏱ Response — ${Date.now() - start}ms | status: ${response.status}`);
+      console.log(
+        TAG,
+        `⏱ Response — ${Date.now() - start}ms | status: ${response.status}`,
+      );
 
       const text = await response.text();
       let json;
@@ -172,13 +186,12 @@ const AddRetailerScreen = () => {
       console.log(TAG, '📩 Response body:', JSON.stringify(json, null, 2));
 
       if (response.ok) {
-        console.log(TAG, '✅ Retailer created successfully');
-        showToast('Account created successfully ✅');
+        showToast('Profile updated successfully ✅');
 
-        // navigation.reset({
-        //   index: 0,
-        //   routes: [{ name: 'App' }],
-        // });
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'App' }],
+        });
       } else {
         console.warn(TAG, `❌ Failed — status: ${response.status}`);
         showToast(json?.message || 'Failed to create account');
@@ -196,9 +209,52 @@ const AddRetailerScreen = () => {
     }
   };
 
+  const fetchRetailerDetails = async () => {
+    try {
+      const retailerId = await AsyncStorage.getItem('user_uuid');
+      if (!retailerId) return;
+
+      const response = await fetch(`${BASE_URL}/retailers/${retailerId}`);
+      const json = await response.json();
+
+      if (json?.success && json?.data) {
+        const data = json.data;
+
+        setFormData({
+          name: data.ownerName || '',
+          mobile: data.contact?.mobile || '',
+          alternate_mobile: data.contact?.alternateMobile || '',
+          email: data.contact?.email || '',
+          shop_name: data.storeName || '',
+          type: '',
+          address: data.address?.line1 || '',
+          area: data.address?.area || '',
+          city: data.address?.city || '',
+          state: data.address?.state || '',
+          pincode: data.address?.pincode || '',
+          near_by_location: data.address?.line2 || '',
+          lat: data.address?.latitude?.toString() || '',
+          lng: data.address?.longitude?.toString() || '',
+        });
+      }
+    } catch (error) {
+      console.log('Fetch retailer error:', error);
+    } finally {
+      setInitialLoading(false);
+    }
+  };
+
   /* =====================
      UI
   ====================== */
+
+  if (initialLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator size="large" color="#FFF" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView edges={['bottom']} style={styles.container}>
@@ -214,7 +270,7 @@ const AddRetailerScreen = () => {
         >
           {/* <Header /> */}
 
-          <Text style={styles.title}>Add Retailer</Text>
+          <Text style={styles.title}>Complete Your Profile</Text>
 
           <RetailerInput
             label="Retailer Name"
@@ -365,7 +421,7 @@ const AddRetailerScreen = () => {
               {loading ? (
                 <ActivityIndicator color="#FFF" />
               ) : (
-                <Text style={styles.submitText}>Submit</Text>
+                <Text style={styles.submitText}>Update Profile</Text>
               )}
             </LinearGradient>
           </TouchableOpacity>

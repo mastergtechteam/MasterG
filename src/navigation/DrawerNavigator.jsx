@@ -364,7 +364,7 @@ const CustomDrawerContent = props => {
           icon={({ size }) => (
             <Icon name="logout" size={size} color="#ff4d4d" />
           )}
-          label="Sign Out"
+          label="Logout"
           labelStyle={styles.labelStyle}
           onPress={handleLogout}
         />

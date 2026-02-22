@@ -88,11 +88,11 @@ const ProductsScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* <Header /> */}
       <GoBackHeader title={item?.title || 'Popular Items'} />
       <ScrollView
         showsVerticalScrollIndicator={false}
         style={styles.scrollView}
+        contentContainerStyle={{ paddingBottom: 80 }}
       >
         <FlatList
           data={products}
@@ -104,25 +104,7 @@ const ProductsScreen = () => {
         />
       </ScrollView>
 
-      {/* Bottom Cart Tab */}
-      {cartItemCount > 0 && (
-        // <View style={styles.cartTab}>
-        //   <View style={styles.cartInfo}>
-        //     <Text style={styles.cartCount}>
-        //       {cartItemCount} item{cartItemCount !== 1 ? 's' : ''}
-        //     </Text>
-        //     <Text style={styles.cartLabel}>in cart</Text>
-        //   </View>
-        //   <TouchableOpacity
-        //     style={styles.viewCartButton}
-        //     onPress={() => navigation.navigate('Cart')}
-        //   >
-        //     <Text style={styles.viewCartText}>View Cart</Text>
-        //     <Ionicons name="chevron-forward" size={18} color="#000" />
-        //   </TouchableOpacity>
-        // </View>
-        <CartBottomTab />
-      )}
+      {cartItemCount > 0 && <CartBottomTab />}
     </SafeAreaView>
   );
 };
@@ -134,7 +116,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0f0f0f',
   },
   scrollView: {
-    marginVertical: 20,
+    marginTop: 20,
   },
 
   section: {

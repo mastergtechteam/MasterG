@@ -34,12 +34,12 @@ const HomeScreen = () => {
     navigation.navigate('Mic');
   };
   const handleQuickBuy = () => {
-    navigation.navigate('Mic');
+    navigation.navigate('Orders');
   };
 
   return (
     <AppSafeArea>
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, marginBottom: 20 }}>
         <FlatList
           data={[]} // dummy data
           keyExtractor={() => 'key'}
@@ -73,10 +73,10 @@ const HomeScreen = () => {
                   title="Quick Buy"
                   subtitle="Buy frequently ordered items"
                   iconBgColor="#143620"
-                  onPress={handleSpeakOrder}
+                  onPress={handleQuickBuy}
                 />
               </View>
-              <AlertStrip />
+              {/* <AlertStrip /> */}
               {/* <InsightCard /> */}
             </>
           }

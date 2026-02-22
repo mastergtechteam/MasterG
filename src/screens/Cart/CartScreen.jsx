@@ -1120,7 +1120,7 @@
 // CartScreen/index.js
 
 import React from 'react';
-import { ScrollView } from 'react-native';
+import { ActivityIndicator, ScrollView } from 'react-native';
 import Header from '../../components/common/Header';
 
 import { useCartScreen } from './useCartScreen';
@@ -1135,6 +1135,7 @@ import PlaceOrderButton from '../../components/Cart/PlaceOrderButton';
 import PaymentModal from '../../components/Cart/PaymentModal';
 import OrderConfirmationModal from '../../components/Cart/OrderConfirmationModal';
 import OrderSuccessModal from '../../components/Cart/OrderSuccessModal';
+import OrderProcessingLoader from '../../components/common/OrderProcessingLoader';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const CartScreen = () => {
@@ -1159,13 +1160,16 @@ const CartScreen = () => {
     navigation,
     dispatch,
     handlePaymentMethod,
+    placingOrder,
   } = useCartScreen();
 
   return (
     <SafeAreaView style={styles.container}>
       <Header />
 
-      {cartItems.length === 0 ? (
+      {placingOrder ? (
+        <OrderProcessingLoader />
+      ) : cartItems.length === 0 ? (
         <EmptyCart navigation={navigation} />
       ) : (
         <ScrollView style={styles.scrollView}>

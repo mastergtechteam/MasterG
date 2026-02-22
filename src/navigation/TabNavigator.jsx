@@ -30,7 +30,7 @@ export default function SalesTabNavigator() {
         tabBarShowLabel: true,
         tabBarLabelStyle: {
           fontSize: 12,
-          marginBottom: 4,
+          // marginBottom: 4,
         },
         tabBarStyle: styles.tabBar,
         tabBarItemStyle: {
@@ -95,7 +95,7 @@ export default function SalesTabNavigator() {
 const styles = StyleSheet.create({
   tabBar: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 10,
     left: 16,
     right: 16,
     height: 70,

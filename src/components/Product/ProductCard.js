@@ -20,6 +20,7 @@ const ProductCard = ({ item }) => {
   const navigation = useNavigation();
   const cartItem = useSelector(selectCartItemById(item.productId));
   const inCartQuantity = cartItem?.quantity ?? 0;
+  const FALLBACK_IMAGE = 'https://via.placeholder.com/150?text=No+Image';
 
   // Extract pricing information
   const sellingPrice = item.pricing?.sellingPrice || 0;
@@ -41,8 +42,18 @@ const ProductCard = ({ item }) => {
     <TouchableOpacity style={styles.productCard} onPress={handleDetails}>
       <View style={styles.imageBadgeContainer}>
         <Image
-          source={{ uri: item.image || item.images[0] }}
+          source={{
+            uri:
+              item?.image ||
+              (Array.isArray(item?.images) && item.images.length > 0
+                ? item.images[0]
+                : FALLBACK_IMAGE),
+          }}
           style={styles.productImage}
+          resizeMode="contain"
+          onError={e => {
+            console.log('Image load failed:', e.nativeEvent.error);
+          }}
         />
       </View>
 
@@ -166,6 +177,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 13,
     fontWeight: '600',
+    height: 32,
   },
   weight: {
     color: '#aaa',

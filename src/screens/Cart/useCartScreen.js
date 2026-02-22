@@ -27,6 +27,7 @@ export const useCartScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
+  const [placingOrder, setPlacingOrder] = useState(false);
   const [orderConfirmationVisible, setOrderConfirmationVisible] =
     useState(false);
 
@@ -61,8 +62,8 @@ export const useCartScreen = () => {
   }, []);
 
   const handlePaymentMethod = async method => {
+    setPlacingOrder(true);
     const retailerId = await AsyncStorage.getItem('user_uuid');
-
     const orderPayload = {
       retailerId,
 
@@ -100,16 +101,13 @@ export const useCartScreen = () => {
 
     const start = Date.now();
     try {
-      const response = await fetch(
-        `${BASE_URL}/api/v1/order`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(orderPayload),
+      const response = await fetch(`${BASE_URL}/api/v1/order`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      );
+        body: JSON.stringify(orderPayload),
+      });
       console.log(TAG, `⏱ Response received — ${Date.now() - start}ms`);
       console.log(TAG, `📡 Status: ${response.status}`);
 
@@ -123,28 +121,62 @@ export const useCartScreen = () => {
       console.log(TAG, '📩 Response body:', JSON.stringify(data, null, 2));
 
       if (response.status >= 200 && response.status < 300) {
-        console.log(TAG, '✅ Order placed successfully');
-        dispatch(clearCart());
         setModalVisible(false);
         setOrderConfirmationVisible(false);
         setOrderPlaced(true);
+        setPlacingOrder(false);
 
         setTimeout(() => {
           setOrderPlaced(false);
+
           navigation.reset({
             index: 0,
             routes: [{ name: 'App' }],
           });
+
+          dispatch(clearCart()); // 👈 MOVE HERE (after navigation)
         }, 3000);
       } else {
+        setPlacingOrder(false);
         console.warn(TAG, `❌ Order failed — status: ${response.status}`);
+        const getErrorMessage = (status, message) => {
+          if (status >= 500) {
+            return 'We are experiencing high demand right now. Please try again in a few moments.';
+          }
+
+          if (status === 400) {
+            return (
+              message ||
+              'Some order details are invalid. Please review and try again.'
+            );
+          }
+
+          if (status === 401) {
+            return 'Your session has expired. Please login again.';
+          }
+
+          if (status === 404) {
+            return 'Something went wrong while placing your order. Please try again.';
+          }
+
+          return (
+            message ||
+            'Unable to place your order at the moment. Please try again.'
+          );
+        };
+
         Alert.alert(
-          'Order Failed',
-          data?.message || `Server error (${response.status})`,
+          'Unable to Place Order',
+          getErrorMessage(response.status, data?.message),
         );
       }
     } catch (error) {
-      console.error(TAG, `❌ Network error — ${Date.now() - start}ms`, error.message);
+      setPlacingOrder(false);
+      console.error(
+        TAG,
+        `❌ Network error — ${Date.now() - start}ms`,
+        error.message,
+      );
       Alert.alert('Network Error', 'Please check your internet connection.');
     }
   };
@@ -170,5 +202,6 @@ export const useCartScreen = () => {
     navigation,
     dispatch,
     handlePaymentMethod,
+    placingOrder,
   };
 };
