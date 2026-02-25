@@ -11,6 +11,7 @@ import { selectCartItemById } from '../../features/cart/cartSelectors';
 import { Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { mapProductToCartItem } from '../../utils/mapProductToCartItem';
+import { ToastAndroid, Platform, Alert } from 'react-native';
 
 const { width } = Dimensions.get('window');
 const ITEM_WIDTH = (width - 48) / 2;
@@ -20,7 +21,17 @@ const ProductCard = ({ item }) => {
   const navigation = useNavigation();
   const cartItem = useSelector(selectCartItemById(item.productId));
   const inCartQuantity = cartItem?.quantity ?? 0;
-  const FALLBACK_IMAGE = 'https://via.placeholder.com/150?text=No+Image';
+
+  const showMaxToast = () => {
+    if (Platform.OS === 'android') {
+      ToastAndroid.show(
+        'Only 10 items allowed per product',
+        ToastAndroid.SHORT,
+      );
+    } else {
+      Alert.alert('Limit Reached', 'Only 10 items allowed per product');
+    }
+  };
 
   // Extract pricing information
   const sellingPrice = item.pricing?.sellingPrice || 0;
@@ -42,13 +53,13 @@ const ProductCard = ({ item }) => {
     <TouchableOpacity style={styles.productCard} onPress={handleDetails}>
       <View style={styles.imageBadgeContainer}>
         <Image
-          source={{
-            uri:
-              item?.image ||
-              (Array.isArray(item?.images) && item.images.length > 0
-                ? item.images[0]
-                : FALLBACK_IMAGE),
-          }}
+          source={
+            item?.image
+              ? { uri: item.image }
+              : Array.isArray(item?.images) && item.images.length > 0
+              ? { uri: item.images[0] }
+              : require('../../assets/images/no-image.png')
+          }
           style={styles.productImage}
           resizeMode="contain"
           onError={e => {
@@ -84,7 +95,13 @@ const ProductCard = ({ item }) => {
             <Text style={styles.quantity}>{inCartQuantity}</Text>
 
             <TouchableOpacity
-              onPress={() => dispatch(incrementQuantity(item.productId))}
+              onPress={() => {
+                if (inCartQuantity >= 10) {
+                  showMaxToast();
+                  return;
+                }
+                dispatch(incrementQuantity(item.productId));
+              }}
             >
               <Ionicons name="add" size={16} color="#000" />
             </TouchableOpacity>

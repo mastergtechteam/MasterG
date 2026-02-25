@@ -11,55 +11,41 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useDispatch } from 'react-redux';
+import {
+  loadRetailerProfile,
+  setRetailerProfile,
+} from '../../features/profile/retailerSlice';
+import { BASE_URL } from '../../api/apiClient';
 
 const SplashScreen = () => {
   const navigation = useNavigation();
+  const dispatch = useDispatch();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const logo = require('../../assets/images/light-logo.png');
 
-  // useEffect(() => {
-  //   Animated.timing(fadeAnim, {
-  //     toValue: 1,
-  //     duration: 1200,
-  //     useNativeDriver: true,
-  //   }).start();
-
-  //   const timer = setTimeout(() => {
-  //     navigation.replace('LanguageSelection');
-  //   }, 3000);
-  //   // const timer = setTimeout(() => {
-  //   //   navigation.replace('App');
-  //   // }, 5000);
-  //   return () => clearTimeout(timer);
-  // }, []);
-
   useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 1200,
-      useNativeDriver: true,
-    }).start();
-
-    const timer = setTimeout(async () => {
-      try {
-        const uuid = await AsyncStorage.getItem('user_uuid');
-
-        console.log('🔐 UUID from storage:', uuid);
-
-        if (uuid) {
-          navigation.replace('App');
-        } else {
-          navigation.replace('Auth');
-        }
-      } catch (error) {
-        navigation.replace('Auth');
-      }
-    }, 3000); // 3 seconds delay
-
-    return () => clearTimeout(timer);
+    initializeApp();
   }, []);
+
+  const initializeApp = async () => {
+    try {
+      const uuid = await AsyncStorage.getItem('user_uuid');
+
+      if (!uuid) {
+        navigation.replace('Auth');
+        return;
+      }
+
+      await dispatch(loadRetailerProfile(uuid)).unwrap();
+
+      navigation.replace('App');
+    } catch (error) {
+      navigation.replace('Auth');
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>

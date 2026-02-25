@@ -95,7 +95,7 @@ export default function SalesTabNavigator() {
 const styles = StyleSheet.create({
   tabBar: {
     position: 'absolute',
-    bottom: 10,
+    // bottom: 10,
     left: 16,
     right: 16,
     height: 70,

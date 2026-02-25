@@ -13,18 +13,16 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import Header from '../../components/common/Header';
 import { BASE_URL } from '../../api/apiClient';
 import { useNavigation } from '@react-navigation/native';
+import { useSelector } from 'react-redux';
 
 export default function InsightsScreen() {
   const [stats, setStats] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [priceChanges, setPriceChanges] = useState([]);
+  const retailerId = useSelector(state => state.retailer.profile?.retailerId);
   const navigation = useNavigation();
 
-  const priceChanges = [
-    { id: '1', name: 'Sugar', days: 'Expected in 5 days', change: '+8%' },
-    { id: '2', name: 'Cooking Oil', days: 'Expected in 7 days', change: '+8%' },
-    { id: '3', name: 'Rice', days: 'Expected in 10 days', change: '-3%' },
-  ];
   useEffect(() => {
     fetchInsights();
   }, []);
@@ -33,8 +31,6 @@ export default function InsightsScreen() {
     try {
       setLoading(true);
       setError(null);
-
-      const retailerId = await AsyncStorage.getItem('user_uuid');
 
       if (!retailerId) {
         throw new Error('Retailer ID not found');
@@ -86,6 +82,20 @@ export default function InsightsScreen() {
           type: 'number',
         },
       ]);
+
+      // 🔥 Set Upcoming Price Changes dynamically
+      const formattedPriceChanges =
+        data?.upcomingPriceChanges?.map((item, index) => ({
+          id: index.toString(),
+          name: item.product,
+          days: `Expected in ${item.expectedInDays} days`,
+          change:
+            item.type === 'INCREASE'
+              ? `+${item.changePercent}%`
+              : `-${item.changePercent}%`,
+        })) ?? [];
+
+      setPriceChanges(formattedPriceChanges);
     } catch (err) {
       console.log('Insights API Error:', err.message);
       setError(err.message);
@@ -172,31 +182,36 @@ export default function InsightsScreen() {
               </AppView>
             )}
 
-            {/* <AppText style={styles.sectionTitle}>
+            <AppText style={styles.sectionTitle}>
               Upcoming Price Changes
             </AppText>
 
-            {priceChanges.map(item => {
-              const isPositive = item.change.includes('+');
+            <FlatList
+              data={priceChanges}
+              keyExtractor={item => item.id}
+              scrollEnabled={false}
+              renderItem={({ item }) => {
+                const isPositive = item.change.includes('+');
 
-              return (
-                <AppView key={item.id} style={styles.priceCard}>
-                  <AppView style={styles.priceInfo}>
-                    <AppText style={styles.priceTitle}>{item.name}</AppText>
-                    <AppText style={styles.priceSub}>{item.days}</AppText>
+                return (
+                  <AppView style={styles.priceCard}>
+                    <AppView style={styles.priceInfo}>
+                      <AppText style={styles.priceTitle}>{item.name}</AppText>
+                      <AppText style={styles.priceSub}>{item.days}</AppText>
+                    </AppView>
+
+                    <AppText
+                      style={[
+                        styles.priceChange,
+                        { color: isPositive ? '#ef4444' : '#22c55e' },
+                      ]}
+                    >
+                      {item.change}
+                    </AppText>
                   </AppView>
-
-                  <AppText
-                    style={[
-                      styles.priceChange,
-                      { color: isPositive ? '#ef4444' : '#22c55e' },
-                    ]}
-                  >
-                    {item.change}
-                  </AppText>
-                </AppView>
-              );
-            })} */}
+                );
+              }}
+            />
           </>
         }
       />
@@ -305,42 +320,42 @@ const styles = StyleSheet.create({
   changeText: {
     fontSize: 12,
   },
-  // sectionTitle: {
-  //   marginTop: 28,
-  //   marginBottom: 12,
-  //   fontSize: 16,
-  //   fontWeight: '600',
-  //   color: '#ffffff',
-  // },
+  sectionTitle: {
+    marginTop: 28,
+    marginBottom: 12,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#ffffff',
+  },
 
-  // priceCard: {
-  //   backgroundColor: '#141414',
-  //   borderRadius: 14,
-  //   padding: 14,
-  //   marginBottom: 10,
-  //   flexDirection: 'row',
-  //   justifyContent: 'space-between',
-  //   alignItems: 'center',
-  // },
+  priceCard: {
+    backgroundColor: '#141414',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
 
-  // priceTitle: {
-  //   fontSize: 14,
-  //   color: '#ffffff',
-  //   fontWeight: '500',
-  //   backgroundColor: '#141414',
-  // },
+  priceTitle: {
+    fontSize: 14,
+    color: '#ffffff',
+    fontWeight: '500',
+    backgroundColor: '#141414',
+  },
 
-  // priceSub: {
-  //   fontSize: 12,
-  //   color: '#9ca3af',
-  //   marginTop: 4,
-  // },
+  priceSub: {
+    fontSize: 12,
+    color: '#9ca3af',
+    marginTop: 4,
+  },
 
-  // priceChange: {
-  //   fontSize: 14,
-  //   fontWeight: '600',
-  // },
-  // priceInfo: {
-  //   backgroundColor: '#141414',
-  // },
+  priceChange: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  priceInfo: {
+    backgroundColor: '#141414',
+  },
 });

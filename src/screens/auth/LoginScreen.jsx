@@ -114,9 +114,14 @@ export default function LoginScreen({ navigation }) {
             />
           </AppView>
 
-          <TouchableOpacity style={styles.OtpButton} onPress={handleGetOtp}>
+          <TouchableOpacity
+            style={[styles.OtpButton, loading && styles.buttonDisabled]}
+            onPress={handleGetOtp}
+            activeOpacity={0.8}
+            disabled={loading}
+          >
             <Text style={styles.OtpButtonTextSelected}>
-              {loading ? 'Sending...' : 'Get OTP'}
+              {loading ? 'Sending OTP...' : 'Get OTP'}
             </Text>
           </TouchableOpacity>
 
@@ -222,5 +227,8 @@ const styles = StyleSheet.create({
     color: '#000000',
     fontSize: 18,
     fontWeight: '600',
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
 });

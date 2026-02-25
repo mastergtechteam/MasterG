@@ -23,6 +23,8 @@ import RetailerInput from '../../components/common/RetailerInput';
 import TypeDropdown from '../../components/common/TypeDropdown';
 import GetLocationButton from '../../components/common/GetLocationButton';
 import UploadImageBtn from '../../components/common/UploadImageButton';
+import { useDispatch } from 'react-redux';
+import { loadRetailerProfile } from '../../features/profile/retailerSlice';
 
 /* =====================
    HELPERS
@@ -104,6 +106,7 @@ const AddRetailerScreen = () => {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     fetchRetailerDetails();
@@ -187,6 +190,9 @@ const AddRetailerScreen = () => {
 
       if (response.ok) {
         showToast('Profile updated successfully ✅');
+
+        // 🔥 Refresh Redux immediately
+        await dispatch(loadRetailerProfile(retailerId)).unwrap();
 
         navigation.reset({
           index: 0,

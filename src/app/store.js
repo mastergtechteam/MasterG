@@ -1,11 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit';
 import cartReducer from '../features/cart/cartSlice';
 import commonReducer from '../features/common/commonSlice';
+import retailerReducer from '../features/profile/retailerSlice';
 
 export const store = configureStore({
   reducer: {
     cart: cartReducer,
     common: commonReducer,
+    retailer: retailerReducer,
   },
   middleware: getDefaultMiddleware =>
     getDefaultMiddleware({

@@ -27,6 +27,7 @@ import { typography } from '../../theme/typography';
 import GoBackHeader from '../../components/common/GoBackHeader';
 import AppSafeArea from '../../components/common/AppSafeArea';
 import { BASE_URL } from '../../api/apiClient';
+import { ToastAndroid, Platform, Alert } from 'react-native';
 
 const { width: screenWidth } = Dimensions.get('window');
 const IMAGE_WIDTH = screenWidth;
@@ -45,6 +46,14 @@ const ProductsDetailsScreen = () => {
   const [quantity, setQuantity] = useState(1);
   const flatListRef = useRef(null);
 
+  const showMessage = message => {
+    if (Platform.OS === 'android') {
+      ToastAndroid.show(message, ToastAndroid.SHORT);
+    } else {
+      Alert.alert('Notice', message);
+    }
+  };
+
   // Get cart item quantity for this product
   const cartItem = useSelector(selectCartItemById(productId));
   const inCartQuantity = cartItem?.quantity ?? 0;
@@ -59,7 +68,10 @@ const ProductsDetailsScreen = () => {
       const start = Date.now();
       try {
         const response = await fetch(url);
-        console.log(TAG, `⏱ ${Date.now() - start}ms | status: ${response.status}`);
+        console.log(
+          TAG,
+          `⏱ ${Date.now() - start}ms | status: ${response.status}`,
+        );
         const json = await response.json();
 
         if (json.success) {
@@ -81,12 +93,30 @@ const ProductsDetailsScreen = () => {
   const handleAddToCart = () => {
     if (!product) return;
 
-    dispatch(addToCart(mapProductToCartItem(product)));
+    const stockInfo = getStockInfo();
 
-    setQuantity(1);
+    if (stockInfo.isOutOfStock) {
+      showMessage('This product is out of stock');
+      return;
+    }
+
+    dispatch(addToCart(mapProductToCartItem(product)));
   };
 
   const handleIncrement = () => {
+    const stockInfo = getStockInfo();
+    const maxLimit = 10;
+
+    if (inCartQuantity >= maxLimit) {
+      showMessage('Maximum 10 items allowed per product');
+      return;
+    }
+
+    if (!stockInfo.isOutOfStock && inCartQuantity >= stockInfo.quantity) {
+      showMessage(`Only ${stockInfo.quantity} items available`);
+      return;
+    }
+
     dispatch(incrementQuantity(product.productId));
   };
 
@@ -182,11 +212,19 @@ const ProductsDetailsScreen = () => {
   };
 
   const getImages = () => {
-    return product.images &&
+    if (
+      product.images &&
       Array.isArray(product.images) &&
       product.images.length > 0
-      ? product.images
-      : ['https://via.placeholder.com/350x350?text=No+Image'];
+    ) {
+      return product.images;
+    }
+
+    if (product.image) {
+      return [product.image];
+    }
+
+    return [null]; // fallback handled inside Image component
   };
 
   if (loading) {
@@ -238,7 +276,15 @@ const ProductsDetailsScreen = () => {
             ref={flatListRef}
             data={getImages()}
             renderItem={({ item }) => (
-              <Image source={{ uri: item }} style={styles.mainImage} />
+              <Image
+                source={
+                  item
+                    ? { uri: item }
+                    : require('../../assets/images/no-image.png')
+                }
+                style={styles.mainImage}
+                resizeMode="contain"
+              />
             )}
             keyExtractor={(_, index) => index.toString()}
             horizontal
@@ -443,7 +489,12 @@ const ProductsDetailsScreen = () => {
 
             <View style={styles.actionSpacer} />
 
-            <TouchableOpacity style={styles.addButton}>
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={() => {
+                navigation.navigate('Cart');
+              }}
+            >
               <MaterialCommunityIcons
                 name="cart-check"
                 size={18}
@@ -456,8 +507,12 @@ const ProductsDetailsScreen = () => {
           </>
         ) : (
           <TouchableOpacity
-            style={styles.addButton}
+            style={[
+              styles.addButton,
+              getStockInfo().isOutOfStock && { opacity: 0.5 },
+            ]}
             onPress={handleAddToCart}
+            disabled={getStockInfo().isOutOfStock}
             activeOpacity={0.8}
           >
             <MaterialCommunityIcons

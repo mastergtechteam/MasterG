@@ -25,6 +25,7 @@
 //   const [expandedOrders, setExpandedOrders] = useState({});
 //   const [orderDetails, setOrderDetails] = useState({});
 //   const [retailerId, setRetailerId] = useState(null);
+//   const [error, setError] = useState(null);
 
 //   useEffect(() => {
 //     loadRetailerAndOrders();
@@ -55,24 +56,36 @@
 
 //   const fetchOrders = async (id = retailerId) => {
 //     if (!id) return;
+
 //     const TAG = '[API:Orders]';
 //     const url = `${BASE_URL}/api/v1/order?retailerId=${id}`;
 //     console.log(TAG, `▶ GET ${url}`);
+
 //     const start = Date.now();
+
 //     try {
+//       setError(null);
+
 //       const res = await fetch(url);
+
 //       console.log(TAG, `⏱ ${Date.now() - start}ms | status: ${res.status}`);
+
+//       if (!res.ok) {
+//         throw new Error(`Server error (${res.status})`);
+//       }
+
 //       const json = await res.json();
 
 //       if (json.success) {
-//         console.log(TAG, `✅ ${json.data?.length ?? 0} orders fetched`);
-//         setOrders(json.data);
+//         setOrders(json.data || []);
 //       } else {
-//         console.warn(TAG, `⚠️ No orders returned`);
-//         setOrders([]);
+//         throw new Error('Failed to fetch orders');
 //       }
 //     } catch (err) {
-//       console.error(TAG, `❌ Fetch Orders Error: ${err.message}`);
+//       console.log(TAG, `❌ Fetch Orders Error: ${err.message}`);
+//       setError(
+//         'We’re unable to load your orders right now. Please try again in a moment.',
+//       );
 //       setOrders([]);
 //     }
 //   };
@@ -280,6 +293,29 @@
 //       {loading ? (
 //         <AppView style={styles.loadingCenter}>
 //           <ActivityIndicator size="large" color={colors.primary} />
+//         </AppView>
+//       ) : error ? (
+//         <AppView style={styles.emptyContainer}>
+//           <MaterialIcons name="cloud-off" size={64} color={colors.textMuted} />
+
+//           <AppText style={styles.emptyText}>Unable to load orders</AppText>
+
+//           <AppText style={styles.emptySubText}>{error}</AppText>
+
+//           <TouchableOpacity
+//             onPress={() => fetchOrders()}
+//             style={{
+//               marginTop: 20,
+//               paddingVertical: 10,
+//               paddingHorizontal: 20,
+//               borderRadius: 8,
+//               backgroundColor: colors.primary,
+//             }}
+//           >
+//             <AppText style={{ color: '#fff', fontWeight: '600' }}>
+//               Retry
+//             </AppText>
+//           </TouchableOpacity>
 //         </AppView>
 //       ) : orders.length === 0 ? (
 //         <AppView style={styles.emptyContainer}>
@@ -563,7 +599,6 @@
 //     color: colors.textSecondary,
 //   },
 // });
-
 import React, { useEffect, useState } from 'react';
 import {
   FlatList,
@@ -581,6 +616,7 @@ import Header from '../../components/common/Header';
 import { colors } from '../../theme/colors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BASE_URL } from '../../api/apiClient';
+import { useNavigation } from '@react-navigation/native';
 
 // const RETAILER_ID = 'RET00001';
 
@@ -592,6 +628,7 @@ const OrdersScreen = () => {
   const [orderDetails, setOrderDetails] = useState({});
   const [retailerId, setRetailerId] = useState(null);
   const [error, setError] = useState(null);
+  const navigation = useNavigation();
 
   useEffect(() => {
     loadRetailerAndOrders();
@@ -641,6 +678,7 @@ const OrdersScreen = () => {
       }
 
       const json = await res.json();
+      console.log(json.data);
 
       if (json.success) {
         setOrders(json.data || []);
@@ -693,164 +731,67 @@ const OrdersScreen = () => {
     fetchOrders().then(() => setRefreshing(false));
   };
 
-  const renderOrderHeader = item => (
-    <TouchableOpacity
-      style={styles.orderHeaderContainer}
-      onPress={() => fetchOrderDetails(item.orderId)}
-      activeOpacity={0.7}
-    >
-      <AppView style={styles.headerLeft}>
-        <AppView>
-          <AppText style={styles.orderId}>{item.orderId}</AppText>
-          <AppText style={styles.date}>
-            {new Date(item.createdAt).toDateString()}
-          </AppText>
-        </AppView>
-      </AppView>
+  const getStatusColor = status => {
+    switch (status?.toLowerCase()) {
+      case 'placed':
+        return { bg: 'rgba(59,130,246,0.15)', text: '#3b82f6' };
+      case 'delivered':
+        return { bg: 'rgba(34,197,94,0.15)', text: '#22c55e' };
+      case 'cancelled':
+        return { bg: 'rgba(239,68,68,0.15)', text: '#ef4444' };
+      case 'processing':
+        return { bg: 'rgba(234,179,8,0.15)', text: '#eab308' };
+      default:
+        return { bg: 'rgba(156,163,175,0.15)', text: '#9ca3af' };
+    }
+  };
 
-      <AppView style={styles.headerRight}>
-        <AppView style={styles.statusAmount}>
-          <AppText style={styles.amount}>₹{item.billing.grandTotal}</AppText>
-          <AppView style={styles.statusBadge}>
-            <AppText style={styles.status}>{item.orderStatus}</AppText>
-          </AppView>
-        </AppView>
-
-        <MaterialIcons
-          name={expandedOrders[item.orderId] ? 'expand-less' : 'expand-more'}
-          size={24}
-          color={colors.primary}
-        />
-      </AppView>
-    </TouchableOpacity>
-  );
-
-  const renderOrderDetails = item => {
-    const details = orderDetails[item.orderId];
+  const renderOrderCard = ({ item }) => {
+    const statusColor = getStatusColor(item.orderStatus);
 
     return (
-      <AppView style={styles.detailsContainer}>
-        {/* Order Summary Section */}
-        <AppView style={styles.summarySection}>
-          <AppText style={styles.sectionTitle}>Order Summary</AppText>
-
-          <AppView style={styles.summaryRow}>
-            <AppText style={styles.summaryLabel}>Items</AppText>
-            <AppText style={styles.summaryValue}>
-              {item.items.length} item{item.items.length !== 1 ? 's' : ''}
-            </AppText>
-          </AppView>
-
-          <AppView style={styles.summaryRow}>
-            <AppText style={styles.summaryLabel}>Order Date</AppText>
-            <AppText style={styles.summaryValue}>
+      <TouchableOpacity
+        style={styles.orderCard}
+        activeOpacity={0.9}
+        onPress={() =>
+          navigation.navigate('ViewOrder', {
+            orderId: item.orderId,
+          })
+        }
+      >
+        {/* Top Row */}
+        <AppView style={styles.topRow}>
+          <AppView style={styles.orderInfo}>
+            <AppText style={styles.orderId}>#{item.orderId.slice(-6)}</AppText>
+            <AppText style={styles.date}>
               {new Date(item.createdAt).toDateString()}
             </AppText>
           </AppView>
 
-          {details && (
-            <>
-              <AppView style={styles.summaryRow}>
-                <AppText style={styles.summaryLabel}>Payment Method</AppText>
-                <AppText style={styles.summaryValue}>
-                  {details.payment?.mode || 'N/A'}
-                </AppText>
-              </AppView>
-
-              <AppView style={styles.summaryRow}>
-                <AppText style={styles.summaryLabel}>Expected Delivery</AppText>
-                <AppText style={styles.summaryValue}>
-                  {new Date(
-                    details.delivery?.expectedDeliveryTime,
-                  ).toDateString()}
-                </AppText>
-              </AppView>
-            </>
-          )}
+          <AppText style={styles.amount}>₹{item.billing?.grandTotal}</AppText>
         </AppView>
 
-        {/* Items Section */}
-        {details && (
-          <AppView style={styles.itemsSection}>
-            <AppText style={styles.sectionTitle}>Items Ordered</AppText>
+        {/* Divider */}
+        <AppView style={styles.divider} />
 
-            {details.items.map((product, index) => (
-              <AppView key={index} style={styles.itemCard}>
-                <AppView style={styles.itemHeader}>
-                  <AppText style={styles.itemName}>
-                    {product.productName}
-                  </AppText>
-                  <AppText style={styles.itemPrice}>₹{product.price}</AppText>
-                </AppView>
-
-                <AppView style={styles.itemFooter}>
-                  <AppText style={styles.itemQuantity}>
-                    Qty: {product.quantity} {product.unit}
-                  </AppText>
-                </AppView>
-              </AppView>
-            ))}
+        {/* Bottom Row */}
+        <AppView style={styles.bottomRow}>
+          <AppView
+            style={[styles.statusBadge, { backgroundColor: statusColor.bg }]}
+          >
+            <AppText style={[styles.statusText, { color: statusColor.text }]}>
+              {item.orderStatus}
+            </AppText>
           </AppView>
-        )}
 
-        {/* Billing Section */}
-        {details && (
-          <AppView style={styles.billingSection}>
-            <AppText style={styles.sectionTitle}>Billing Details</AppText>
-
-            <AppView style={styles.billingRow}>
-              <AppText style={styles.billingLabel}>Items Total</AppText>
-              <AppText style={styles.billingValue}>
-                ₹{details.billing.itemTotal}
-              </AppText>
-            </AppView>
-
-            <AppView style={styles.billingRow}>
-              <AppText style={styles.billingLabel}>Delivery Charge</AppText>
-              <AppText style={styles.billingValue}>
-                ₹{details.billing.deliveryCharge}
-              </AppText>
-            </AppView>
-
-            <AppView style={styles.billingRow}>
-              <AppText style={styles.billingLabel}>Tax</AppText>
-              <AppText style={styles.billingValue}>
-                ₹{details.billing.tax}
-              </AppText>
-            </AppView>
-
-            <AppView style={styles.divider} />
-
-            <AppView style={styles.totalRow}>
-              <AppText style={styles.totalLabel}>Grand Total</AppText>
-              <AppText style={styles.totalValue}>
-                ₹{details.billing.grandTotal}
-              </AppText>
-            </AppView>
+          <AppView style={styles.viewSection}>
+            <AppText style={styles.viewText}>View Details</AppText>
+            <MaterialIcons name="arrow-forward-ios" size={14} color="#9ca3af" />
           </AppView>
-        )}
-      </AppView>
+        </AppView>
+      </TouchableOpacity>
     );
   };
-
-  const renderOrderCard = ({ item }) => (
-    <AppView style={styles.orderCard}>
-      {renderOrderHeader(item)}
-
-      {expandedOrders[item.orderId] && (
-        <>
-          {!orderDetails[item.orderId] ? (
-            <AppView style={styles.loadingContainer}>
-              <ActivityIndicator size="small" color={colors.primary} />
-              <AppText style={styles.loadingText}>Loading details...</AppText>
-            </AppView>
-          ) : (
-            renderOrderDetails(item)
-          )}
-        </>
-      )}
-    </AppView>
-  );
 
   return (
     <AppSafeArea style={styles.container}>
@@ -921,7 +862,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    paddingBottom: 80,
+    paddingBottom: 60,
   },
 
   listContent: {
@@ -957,67 +898,142 @@ const styles = StyleSheet.create({
   },
 
   // Order Card
+  // orderCard: {
+  //   backgroundColor: colors.background,
+  //   borderRadius: 16,
+  //   marginBottom: 12,
+  //   overflow: 'hidden',
+  //   borderWidth: 1,
+  //   borderColor: colors.border,
+  // },
+
+  // orderHeaderContainer: {
+  //   flexDirection: 'row',
+  //   justifyContent: 'space-between',
+  //   alignItems: 'center',
+  //   paddingHorizontal: 16,
+  //   paddingVertical: 14,
+  // },
+
+  // headerLeft: {
+  //   flex: 1,
+  // },
+
+  // headerRight: {
+  //   flexDirection: 'row',
+  //   alignItems: 'center',
+  //   gap: 12,
+  // },
+
+  // orderId: {
+  //   fontSize: 16,
+  //   fontWeight: '700',
+  //   color: colors.textPrimary,
+  // },
+
+  // date: {
+  //   fontSize: 12,
+  //   color: colors.textSecondary,
+  //   marginTop: 4,
+  // },
+
+  // statusAmount: {
+  //   alignItems: 'flex-end',
+  //   gap: 8,
+  // },
+
+  // amount: {
+  //   fontSize: 16,
+  //   fontWeight: '700',
+  //   color: colors.primary,
+  // },
+
+  // statusBadge: {
+  //   backgroundColor: colors.primary + '20',
+  //   paddingHorizontal: 10,
+  //   paddingVertical: 4,
+  //   borderRadius: 8,
+  // },
+
+  // status: {
+  //   fontSize: 11,
+  //   fontWeight: '600',
+  //   color: colors.primary,
+  // },
+
   orderCard: {
-    backgroundColor: colors.background,
-    borderRadius: 16,
-    marginBottom: 12,
-    overflow: 'hidden',
+    backgroundColor: '#111827',
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 16,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(255,255,255,0.04)',
   },
 
-  orderHeaderContainer: {
+  topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    backgroundColor: '#111827',
   },
 
-  headerLeft: {
-    flex: 1,
-  },
-
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+  orderInfo: {
+    backgroundColor: '#111827',
   },
 
   orderId: {
     fontSize: 16,
     fontWeight: '700',
-    color: colors.textPrimary,
+    color: '#ffffff',
   },
 
   date: {
     fontSize: 12,
-    color: colors.textSecondary,
+    color: '#9ca3af',
     marginTop: 4,
   },
 
-  statusAmount: {
-    alignItems: 'flex-end',
-    gap: 8,
+  amount: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#22c55e',
   },
 
-  amount: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.primary,
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    marginVertical: 14,
+  },
+
+  bottomRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#111827',
   },
 
   statusBadge: {
-    backgroundColor: colors.primary + '20',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 30,
   },
 
-  status: {
-    fontSize: 11,
+  statusText: {
+    fontSize: 12,
     fontWeight: '600',
-    color: colors.primary,
+    textTransform: 'capitalize',
+  },
+
+  viewSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#111827',
+  },
+
+  viewText: {
+    fontSize: 13,
+    color: '#9ca3af',
+    marginRight: 6,
   },
 
   // Details Container

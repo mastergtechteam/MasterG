@@ -57,7 +57,9 @@ const ProductsScreen = () => {
 
   // console.log(data?.data);
 
-  const products = data?.data || [];
+  const products = (data?.data || []).filter(
+    product => product.status === 'ACTIVE',
+  );
 
   if (loading) {
     return <Loader />;

@@ -1,11 +1,13 @@
 /**
  * Application Constants
  */
+import { BASE_URL } from '../api/apiClient';
+
 
 export const CONSTANTS = {
   // API Endpoints
-  PRODUCTS_API: 'https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com/products',
-  SEARCH_API: 'https://2a0t2oahs8.execute-api.ap-south-1.amazonaws.com/search',
+  PRODUCTS_API: `${BASE_URL}/products`,
+  SEARCH_API: `${BASE_URL}/search`,
 
   // Gemini AI
   GEMINI_MODEL: 'gemini-2.5-flash',

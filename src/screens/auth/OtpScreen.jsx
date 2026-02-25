@@ -9,6 +9,7 @@ import {
   Platform,
   TouchableOpacity,
   Text,
+  ActivityIndicator,
 } from 'react-native';
 
 import AppSafeArea from '../../components/common/AppSafeArea';
@@ -24,9 +25,13 @@ import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BASE_URL } from '../../api/apiClient';
+import { useDispatch } from 'react-redux';
+import { loadRetailerProfile } from '../../features/profile/retailerSlice';
+import { fetchRetailerProfileApi } from '../services/Profile/profileService';
 
 export default function OtpScreen({ navigation, route }) {
   const { mobile } = route.params;
+  const dispatch = useDispatch();
 
   const confirmation = getConfirmation();
 
@@ -44,18 +49,6 @@ export default function OtpScreen({ navigation, route }) {
       duration: 1200,
       useNativeDriver: true,
     }).start();
-
-    const unsubscribe = onAuthStateChanged(getAuth(), user => {
-      if (user) {
-        // navigation.reset({
-        //   index: 0,
-        //   routes: [{ name: 'App' }],
-        // });
-        navigation.navigate('GetLocation');
-      }
-    });
-
-    return unsubscribe;
   }, []);
 
   const handleChange = (value, index) => {
@@ -76,36 +69,25 @@ export default function OtpScreen({ navigation, route }) {
 
   const handleVerify = async () => {
     const enteredOtp = otp.join('');
-
     if (enteredOtp.length !== 6) return;
-
-    if (!confirmation) {
-      console.log('Confirmation object missing');
-      return;
-    }
+    if (!confirmation) return;
 
     try {
       setLoading(true);
 
       const response = await confirmation.confirm(enteredOtp);
 
-      // console.log('User Verified:', response.user);
-
       const uuid = response?.user?._user?.uid;
-      const mobileNumber = response?.user?.phoneNumber; // Firebase phone number
+      const mobileNumber = response?.user?.phoneNumber;
+
       await AsyncStorage.setItem('user_uuid', uuid);
       await AsyncStorage.setItem('user_mobile', mobileNumber);
 
-      // console.log('Stored UUID:', uuid);
-      // console.log('Stored Mobile:', mobileNumber);
-
-      // 🔹 Log all AsyncStorage data
-      const keys = await AsyncStorage.getAllKeys();
-      const items = await AsyncStorage.multiGet(keys);
-
-      console.log('All AsyncStorage Data:', items);
-
+      // 👇 WAIT for retailer to be created/fetched
       await ensureRetailerExists();
+      await dispatch(loadRetailerProfile(uuid)).unwrap();
+      // 👇 Navigate ONLY after Redux is updated
+      navigation.replace('GetLocation');
     } catch (error) {
       console.log('OTP Verify Error:', error);
     } finally {
@@ -121,42 +103,19 @@ export default function OtpScreen({ navigation, route }) {
       const uuid = await AsyncStorage.getItem('user_uuid');
       const mobileNumber = await AsyncStorage.getItem('user_mobile');
 
-      console.log(TAG, '📦 UUID:', uuid);
-      console.log(TAG, '📦 Mobile:', mobileNumber);
+      if (!uuid) return;
 
-      if (!uuid) {
-        console.warn(TAG, '❌ UUID not found in storage');
-        return;
-      }
-
-      // 1️⃣ Check if retailer exists
-      console.log(TAG, `▶ GET ${baseUrl}/${uuid}`);
-      let start = Date.now();
-      const checkResponse = await fetch(`${baseUrl}/${uuid}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
+      const checkResponse = await fetch(`${baseUrl}/${uuid}`);
       const checkData = await checkResponse.json();
-      console.log(
-        TAG,
-        `⏱ Check — ${Date.now() - start}ms | status: ${checkResponse.status}`,
-      );
-      console.log(
-        TAG,
-        '📩 Check response:',
-        JSON.stringify(checkData, null, 2),
-      );
 
-      // 2️⃣ If not found → Create retailer
+      let retailerData;
+
       if (!checkData.success && checkData.message === 'Retailer not found') {
-        console.log(TAG, '⚠️ Retailer not found — creating...');
         const body = {
           retailerId: uuid,
           contact: { mobile: mobileNumber },
           status: 'ACTIVE',
         };
-        console.log(TAG, '▶ POST retailers:', JSON.stringify(body, null, 2));
-        start = Date.now();
 
         const createResponse = await fetch(baseUrl, {
           method: 'POST',
@@ -165,25 +124,14 @@ export default function OtpScreen({ navigation, route }) {
         });
 
         const createData = await createResponse.json();
-        console.log(
-          TAG,
-          `⏱ Create — ${Date.now() - start}ms | status: ${
-            createResponse.status
-          }`,
-        );
-        console.log(
-          TAG,
-          '📩 Create response:',
-          JSON.stringify(createData, null, 2),
-        );
-        return createData;
+        retailerData = createData?.data;
+      } else {
+        retailerData = checkData?.data;
       }
 
-      console.log(TAG, '✅ Retailer already exists');
-      return checkData;
+      return retailerData;
     } catch (error) {
-      console.error(TAG, '❌ Error:', error.message);
-      throw error;
+      console.error(TAG, error);
     }
   }
 
@@ -238,10 +186,17 @@ export default function OtpScreen({ navigation, route }) {
             ))}
           </AppView>
 
-          <TouchableOpacity style={styles.OtpButton} onPress={handleVerify}>
-            <Text style={styles.OtpButtonTextSelected}>
-              {loading ? 'Verifying...' : 'Verify & Login'}
-            </Text>
+          <TouchableOpacity
+            style={[styles.OtpButton, loading && styles.buttonDisabled]}
+            onPress={handleVerify}
+            activeOpacity={0.8}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color="#000000" />
+            ) : (
+              <Text style={styles.OtpButtonTextSelected}>Verify & Login</Text>
+            )}
           </TouchableOpacity>
 
           <Pressable onPress={() => navigation.goBack()}>
@@ -327,5 +282,8 @@ const styles = StyleSheet.create({
     color: '#000000',
     fontSize: 18,
     fontWeight: '600',
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
 });

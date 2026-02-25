@@ -1,58 +1,56 @@
-import React, { useEffect, useState } from 'react';
-import {
-  View,
-  FlatList,
-  TouchableOpacity,
-  PermissionsAndroid,
-  Platform,
-  Alert,
-  Linking,
-  StyleSheet,
-  ActivityIndicator,
-  ToastAndroid,
-  Text,
-} from 'react-native';
+import React from 'react';
+import { View, FlatList } from 'react-native';
 import AppSafeArea from '../../components/common/AppSafeArea';
-import AppText from '../../components/common/AppText';
-import AppButton from '../../components/common/AppButton';
-import BannerCrousel from '../../components/Home/BannerCrousel';
+import BannerCarousel from '../../components/Home/BannerCrousel';
 import Header from '../../components/common/Header';
 import ActionCard from '../../components/Home/ActionCard';
-import AlertStrip from '../../components/Home/AlertStrip';
 import DealsList from '../../components/Home/DealsList';
-import InsightCard from '../../components/Home/InsightCard';
 import CategoriesSection from '../../components/Home/CategoriesSection';
-import { useNavigation } from '@react-navigation/native';
 import CartBottomTab from '../../components/common/cartBottomTab';
-import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
-import Geolocation from '@react-native-community/geolocation';
+import { useNavigation } from '@react-navigation/native';
+import { useHomeData } from '../../hooks/useHomeData';
+import { useSelector } from 'react-redux';
 
 const HomeScreen = () => {
   const navigation = useNavigation();
+  const { banners, deals, categories, loading, error, refetch } = useHomeData();
 
-  const handleSpeakOrder = () => {
-    navigation.navigate('Mic');
-  };
-  const handleQuickBuy = () => {
-    navigation.navigate('Orders');
-  };
+  const profile = useSelector(state => state.retailer.profile);
+  console.log('Redux Profile:', profile);
 
   return (
     <AppSafeArea>
       <View style={{ flex: 1, marginBottom: 20 }}>
         <FlatList
-          data={[]} // dummy data
+          data={[]}
           keyExtractor={() => 'key'}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 70 }}
           ListHeaderComponent={
             <>
               <Header />
-              <BannerCrousel />
 
-              <CategoriesSection />
+              <BannerCarousel
+                data={banners}
+                loading={loading}
+                error={error}
+                onRetry={refetch}
+              />
 
-              <DealsList />
+              <CategoriesSection
+                data={categories}
+                loading={loading}
+                error={error}
+                onRetry={refetch}
+              />
+
+              <DealsList
+                data={deals}
+                loading={loading}
+                error={error}
+                onRetry={refetch}
+              />
+
               <View
                 style={{
                   flexDirection: 'row',
@@ -65,7 +63,7 @@ const HomeScreen = () => {
                   icon="mic"
                   title="Speak & Order"
                   subtitle="Order in seconds using voice"
-                  onPress={handleSpeakOrder}
+                  onPress={() => navigation.navigate('Mic')}
                 />
 
                 <ActionCard
@@ -73,11 +71,9 @@ const HomeScreen = () => {
                   title="Quick Buy"
                   subtitle="Buy frequently ordered items"
                   iconBgColor="#143620"
-                  onPress={handleQuickBuy}
+                  onPress={() => navigation.navigate('Orders')}
                 />
               </View>
-              {/* <AlertStrip /> */}
-              {/* <InsightCard /> */}
             </>
           }
         />
