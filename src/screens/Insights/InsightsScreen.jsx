@@ -110,117 +110,130 @@ export default function InsightsScreen() {
 
   return (
     <AppSafeArea style={styles.container}>
-      <FlatList
-        data={[]}
-        keyExtractor={() => 'key'}
-        showsVerticalScrollIndicator={false}
-        ListHeaderComponent={
-          <>
-            <Header />
+      <Header />
+      <AppView style={styles.contentWrapper}>
+        <FlatList
+          data={[]}
+          keyExtractor={() => 'key'}
+          showsVerticalScrollIndicator={false}
+          ListHeaderComponent={
+            <>
+              {loading && (
+                <AppView style={styles.centerState}>
+                  <ActivityIndicator size="large" color="#22c55e" />
+                  <AppText style={styles.stateText}>
+                    Fetching insights...
+                  </AppText>
+                </AppView>
+              )}
 
-            {loading && (
-              <AppView style={styles.centerState}>
-                <ActivityIndicator size="large" color="#22c55e" />
-                <AppText style={styles.stateText}>Fetching insights...</AppText>
-              </AppView>
-            )}
+              {error && !loading && (
+                <AppView style={styles.centerState}>
+                  <Ionicons
+                    name="cloud-offline-outline"
+                    size={48}
+                    color="#f59e0b"
+                  />
 
-            {error && !loading && (
-              <AppView style={styles.centerState}>
-                <Ionicons
-                  name="cloud-offline-outline"
-                  size={48}
-                  color="#f59e0b"
-                />
+                  <AppText style={styles.errorTitle}>
+                    We’re experiencing high demand
+                  </AppText>
 
-                <AppText style={styles.errorTitle}>
-                  We’re experiencing high demand
-                </AppText>
+                  <AppText style={styles.errorSub}>
+                    Sorry for the inconvenience. Our servers are a little busy
+                    right now. Please try again in a moment.
+                  </AppText>
 
-                <AppText style={styles.errorSub}>
-                  Sorry for the inconvenience. Our servers are a little busy
-                  right now. Please try again in a moment.
-                </AppText>
+                  <TouchableOpacity
+                    style={styles.retryBtn}
+                    onPress={fetchInsights}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons name="refresh-outline" size={16} color="#000" />
+                    <AppText style={styles.retryText}> Try Again</AppText>
+                  </TouchableOpacity>
+                </AppView>
+              )}
 
-                <TouchableOpacity
-                  style={styles.retryBtn}
-                  onPress={fetchInsights}
-                  activeOpacity={0.8}
-                >
-                  <Ionicons name="refresh-outline" size={16} color="#000" />
-                  <AppText style={styles.retryText}> Try Again</AppText>
-                </TouchableOpacity>
-              </AppView>
-            )}
+              {!loading && !error && (
+                <AppView style={styles.grid}>
+                  {stats.map((item, index) => {
+                    const isTotalOrders = item.title === 'Total Orders';
 
-            {!loading && !error && (
-              <AppView style={styles.grid}>
-                {stats.map((item, index) => {
-                  const isTotalOrders = item.title === 'Total Orders';
+                    const CardWrapper = isTotalOrders
+                      ? TouchableOpacity
+                      : AppView;
 
-                  const CardWrapper = isTotalOrders
-                    ? TouchableOpacity
-                    : AppView;
+                    return (
+                      <CardWrapper
+                        key={item.id}
+                        style={[
+                          styles.statCard,
+                          index === 2 && styles.fullCard,
+                        ]}
+                        onPress={isTotalOrders ? handleOrders : undefined}
+                        activeOpacity={isTotalOrders ? 0.8 : undefined}
+                      >
+                        <AppView style={styles.iconCircle}>
+                          <Ionicons
+                            name={item.icon}
+                            size={18}
+                            color="#22c55e"
+                          />
+                        </AppView>
+
+                        <AppText style={styles.statTitle}>{item.title}</AppText>
+
+                        <AppText style={styles.statValue}>{item.value}</AppText>
+                      </CardWrapper>
+                    );
+                  })}
+                </AppView>
+              )}
+
+              <AppText style={styles.sectionTitle}>
+                Upcoming Price Changes
+              </AppText>
+
+              <FlatList
+                data={priceChanges}
+                keyExtractor={item => item.id}
+                scrollEnabled={false}
+                renderItem={({ item }) => {
+                  const isPositive = item.change.includes('+');
 
                   return (
-                    <CardWrapper
-                      key={item.id}
-                      style={[styles.statCard, index === 2 && styles.fullCard]}
-                      onPress={isTotalOrders ? handleOrders : undefined}
-                      activeOpacity={isTotalOrders ? 0.8 : undefined}
-                    >
-                      <AppView style={styles.iconCircle}>
-                        <Ionicons name={item.icon} size={18} color="#22c55e" />
+                    <AppView style={styles.priceCard}>
+                      <AppView style={styles.priceInfo}>
+                        <AppText style={styles.priceTitle}>{item.name}</AppText>
+                        <AppText style={styles.priceSub}>{item.days}</AppText>
                       </AppView>
 
-                      <AppText style={styles.statTitle}>{item.title}</AppText>
-
-                      <AppText style={styles.statValue}>{item.value}</AppText>
-                    </CardWrapper>
-                  );
-                })}
-              </AppView>
-            )}
-
-            <AppText style={styles.sectionTitle}>
-              Upcoming Price Changes
-            </AppText>
-
-            <FlatList
-              data={priceChanges}
-              keyExtractor={item => item.id}
-              scrollEnabled={false}
-              renderItem={({ item }) => {
-                const isPositive = item.change.includes('+');
-
-                return (
-                  <AppView style={styles.priceCard}>
-                    <AppView style={styles.priceInfo}>
-                      <AppText style={styles.priceTitle}>{item.name}</AppText>
-                      <AppText style={styles.priceSub}>{item.days}</AppText>
+                      <AppText
+                        style={[
+                          styles.priceChange,
+                          { color: isPositive ? '#ef4444' : '#22c55e' },
+                        ]}
+                      >
+                        {item.change}
+                      </AppText>
                     </AppView>
-
-                    <AppText
-                      style={[
-                        styles.priceChange,
-                        { color: isPositive ? '#ef4444' : '#22c55e' },
-                      ]}
-                    >
-                      {item.change}
-                    </AppText>
-                  </AppView>
-                );
-              }}
-            />
-          </>
-        }
-      />
+                  );
+                }}
+              />
+            </>
+          }
+        />
+      </AppView>
     </AppSafeArea>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  contentWrapper: {
     flex: 1,
     paddingHorizontal: 16,
   },

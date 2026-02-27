@@ -49,54 +49,6 @@ const ProfileScreen = () => {
     return !retailerData.storeName || !retailerData.address;
   };
 
-  const fetchRetailer = async () => {
-    try {
-      setLoading(true);
-
-      const retailerId = await AsyncStorage.getItem('user_uuid');
-
-      console.log('📦 Retailer ID from storage:', retailerId);
-
-      if (!retailerId) {
-        setRetailer(null);
-        setLoading(false);
-        return;
-      }
-
-      const TAG = '[API:Profile]';
-      const url = `${BASE_URL}/retailers/${retailerId}`;
-      console.log(TAG, `▶ GET ${url}`);
-      const start = Date.now();
-      const response = await fetch(url);
-      console.log(
-        TAG,
-        `⏱ ${Date.now() - start}ms | status: ${response.status}`,
-      );
-      const data = await response.json();
-
-      if (data?.success && data?.data) {
-        const retailerData = data.data;
-
-        // ✅ 1. Update local state (for this screen)
-        setRetailer(retailerData);
-
-        // ✅ 2. Store in Redux (for whole app)
-        dispatch(setRetailerProfile(retailerData));
-      } else {
-        console.warn(TAG, `⚠️ Retailer not found for id: ${retailerId}`);
-        setRetailer(null);
-      }
-    } catch (error) {
-      console.error(
-        '[API:Profile]',
-        `❌ Fetch Retailer Error: ${error.message}`,
-      );
-      setRetailer(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const toggleSection = section => {
     setExpandedSections(prev => ({
       ...prev,
@@ -260,9 +212,9 @@ const ProfileScreen = () => {
             {/* Profile Header */}
             <AppView style={styles.profileSection}>
               <AppView style={styles.profileImageContainer}>
-                {retailer?.storeImage ? (
+                {retailer?.shop_image ? (
                   <Image
-                    source={{ uri: retailer.storeImage }}
+                    source={{ uri: retailer.shop_image }}
                     style={styles.profileImage}
                   />
                 ) : (
@@ -449,23 +401,86 @@ const ProfileScreen = () => {
                 />
               }
             >
-              <TouchableOpacity
-                style={styles.emptyDocumentBox}
-                onPress={handlePanGst}
-                activeOpacity={0.7}
-              >
-                <MaterialIcons
-                  name="info-outline"
-                  size={32}
-                  color={colors.warning}
-                />
-                <AppText style={styles.emptyDocumentText}>
-                  PAN/GST details not added yet
-                </AppText>
-                <AppText style={styles.emptyDocumentSubText}>
-                  Tap to add your documents
-                </AppText>
-              </TouchableOpacity>
+              {retailer?.documents?.panNumber ||
+              retailer?.documents?.gstNumber ||
+              retailer?.pancard ||
+              retailer?.documents?.panImage ||
+              retailer?.documents?.gstImage ? (
+                <>
+                  {retailer?.documents?.panNumber && (
+                    <>
+                      <InfoItem
+                        label="PAN Number"
+                        value={retailer.documents.panNumber}
+                        icon={
+                          <MaterialIcons
+                            name="badge"
+                            size={16}
+                            color={colors.primary}
+                          />
+                        }
+                      />
+                      <View style={styles.divider} />
+                    </>
+                  )}
+
+                  {retailer?.documents?.gstNumber && (
+                    <>
+                      <InfoItem
+                        label="GST Number"
+                        value={retailer.documents.gstNumber}
+                        icon={
+                          <MaterialIcons
+                            name="receipt"
+                            size={16}
+                            color={colors.primary}
+                          />
+                        }
+                      />
+                      <View style={styles.divider} />
+                    </>
+                  )}
+
+                  {retailer?.pancard && (
+                    <>
+                      <AppText style={{ marginBottom: 8 }}>PAN Image</AppText>
+                      <Image
+                        source={{ uri: retailer.pancard }}
+                        style={styles.documentImage}
+                      />
+                      <View style={styles.divider} />
+                    </>
+                  )}
+
+                  {retailer?.documents?.gstImage && (
+                    <>
+                      <AppText style={{ marginBottom: 8 }}>GST Image</AppText>
+                      <Image
+                        source={{ uri: retailer.documents.gstImage }}
+                        style={styles.documentImage}
+                      />
+                    </>
+                  )}
+                </>
+              ) : (
+                <TouchableOpacity
+                  style={styles.emptyDocumentBox}
+                  onPress={handlePanGst}
+                  activeOpacity={0.7}
+                >
+                  <MaterialIcons
+                    name="info-outline"
+                    size={32}
+                    color={colors.warning}
+                  />
+                  <AppText style={styles.emptyDocumentText}>
+                    PAN/GST details not added yet
+                  </AppText>
+                  <AppText style={styles.emptyDocumentSubText}>
+                    Tap to add your documents
+                  </AppText>
+                </TouchableOpacity>
+              )}
             </ExpandableSection>
 
             {/* Shop Image Section */}
@@ -477,9 +492,9 @@ const ProfileScreen = () => {
               }
             >
               <AppView style={styles.shopImageContainer}>
-                {retailer?.storeImage ? (
+                {retailer?.shop_image ? (
                   <Image
-                    source={{ uri: retailer.storeImage }}
+                    source={{ uri: retailer.shop_image }}
                     style={styles.shopImageDisplay}
                   />
                 ) : (
@@ -801,5 +816,12 @@ const styles = StyleSheet.create({
     color: '#000',
     fontWeight: '700',
     fontSize: 13,
+  },
+  documentImage: {
+    width: '100%',
+    height: 180,
+    borderRadius: 12,
+    marginBottom: 12,
+    resizeMode: 'cover',
   },
 });

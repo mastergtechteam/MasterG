@@ -13,8 +13,10 @@ import AppButton from '../../components/common/AppButton';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
+import { useNavigation } from '@react-navigation/native';
 
 const SettingsScreen = () => {
+  const navigation = useNavigation();
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
       { text: 'Cancel', onPress: () => {} },
@@ -62,6 +64,10 @@ const SettingsScreen = () => {
     <AppText style={styles.sectionTitle}>{title}</AppText>
   );
 
+  function handleEditProfile() {
+    navigation.navigate('EditProfile');
+  }
+
   return (
     <AppSafeArea>
       <ScrollView
@@ -83,27 +89,7 @@ const SettingsScreen = () => {
             <SettingItem
               icon="account-circle"
               label="Edit Profile"
-              onPress={() => console.log('Edit Profile')}
-            />
-            <SettingItem
-              icon="email"
-              label="Email Address"
-              onPress={() => console.log('Email Address')}
-            />
-            <SettingItem
-              icon="phone"
-              label="Phone Number"
-              onPress={() => console.log('Phone Number')}
-            />
-            <SettingItem
-              icon="lock"
-              label="Change Password"
-              onPress={() => console.log('Change Password')}
-            />
-            <SettingItem
-              icon="map-marker"
-              label="My Addresses"
-              onPress={() => console.log('My Addresses')}
+              onPress={handleEditProfile}
             />
           </View>
         </View>

@@ -217,7 +217,7 @@ import Geolocation from '@react-native-community/geolocation';
 
 const GetLocationButton = ({ onLocationFetched }) => {
   const [loading, setLoading] = useState(false);
-
+  const GOOGLE_API_KEY = 'AIzaSyA5pFD_JmbJnZPml2qyjy_YunVy6fD2nUc';
   /* =====================
      PERMISSION
   ====================== */
@@ -253,46 +253,137 @@ const GetLocationButton = ({ onLocationFetched }) => {
   /* =====================
      REVERSE GEOCODING
   ====================== */
+  //   const reverseGeocode = async (lat, lng) => {
+  //     try {
+  //       const res = await fetch(
+  //         `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_API_KEY}`,
+  //       );
+
+  //       const data = await res.json();
+
+  //       console.log('STATUS:', data.status);
+
+  //       if (data.status === 'OK') {
+  //         const result = data.results[0];
+
+  //         let city = '';
+  //         let state = '';
+  //         let country = '';
+  //         let postalCode = '';
+
+  //         result.address_components.forEach(component => {
+  //           if (component.types.includes('locality')) {
+  //             city = component.long_name;
+  //           }
+  //           if (component.types.includes('administrative_area_level_1')) {
+  //             state = component.long_name;
+  //           }
+  //           if (component.types.includes('country')) {
+  //             country = component.long_name;
+  //           }
+  //           if (component.types.includes('postal_code')) {
+  //             postalCode = component.long_name;
+  //           }
+  //         });
+
+  //         const fullDetails = `
+  // Full Address: ${result.formatted_address}
+
+  // City: ${city}
+  // State: ${state}
+  // Country: ${country}
+  // Postal Code: ${postalCode}
+
+  // Latitude: ${lat}
+  // Longitude: ${lng}
+  //       `;
+
+  //         Alert.alert('Location Details', fullDetails);
+
+  //         return {
+  //           lat: lat.toString(),
+  //           lng: lng.toString(),
+  //           area:
+  //             result.address_components.find(c =>
+  //               c.types.includes('sublocality_level_1'),
+  //             )?.long_name ||
+  //             result.address_components.find(c => c.types.includes('route'))
+  //               ?.long_name ||
+  //             '',
+  //           city: city,
+  //           state: state,
+  //           pincode: postalCode,
+  //         };
+  //       } else {
+  //         Alert.alert('Geocode Error', data.status);
+  //         return null;
+  //       }
+  //     } catch (error) {
+  //       console.log('ERROR:', error);
+  //       Alert.alert('Error', 'Something went wrong while fetching location');
+  //       return null;
+  //     }
+  //   };
+
   const reverseGeocode = async (lat, lng) => {
     try {
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
-        {
-          headers: {
-            'User-Agent': 'RetailerApp/1.0 (support@company.com)',
-            Accept: 'application/json',
-          },
-        },
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_API_KEY}`,
       );
 
       const data = await res.json();
-      const addr = data.address || {};
-      console.log(data);
+
+      if (data.status !== 'OK' || !data.results.length) {
+        Alert.alert('Geocode Error', data.status);
+        return null;
+      }
+
+      const result = data.results[0];
+
+      const getComponent = type =>
+        result.address_components.find(c => c.types.includes(type))
+          ?.long_name || '';
+
+      // ---- Extract Properly ----
+      const streetNumber = getComponent('street_number');
+      const route = getComponent('route');
+
+      const addressLine =
+        [streetNumber, route].filter(Boolean).join(', ') ||
+        result.formatted_address;
+
+      const area =
+        getComponent('sublocality_level_1') ||
+        getComponent('sublocality') ||
+        getComponent('neighborhood') ||
+        getComponent('route') ||
+        '';
+
+      const city =
+        getComponent('locality') ||
+        getComponent('postal_town') ||
+        getComponent('administrative_area_level_2') ||
+        '';
+
+      const state = getComponent('administrative_area_level_1') || '';
+
+      const pincode = getComponent('postal_code') || '';
 
       return {
         lat: lat.toString(),
         lng: lng.toString(),
-        area:
-          addr.neighbourhood ||
-          addr.suburb ||
-          addr.residential ||
-          addr.village ||
-          addr.hamlet ||
-          addr.quarter ||
-          addr.city_district ||
-          addr.town ||
-          addr.road || // fallback
-          addr.city ||
-          '',
-        city: addr.city || addr.town || addr.county || '',
-        state: addr.state || addr.city || '',
-        pincode: addr.postcode || '',
+        address: addressLine,
+        area,
+        city,
+        state,
+        pincode,
       };
-    } catch {
+    } catch (error) {
+      console.log('ERROR:', error);
+      Alert.alert('Error', 'Something went wrong while fetching location');
       return null;
     }
   };
-
   /* =====================
      FETCH LOCATION
   ====================== */

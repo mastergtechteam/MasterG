@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, FlatList } from 'react-native';
 import AppSafeArea from '../../components/common/AppSafeArea';
 import BannerCarousel from '../../components/Home/BannerCrousel';
@@ -10,10 +10,37 @@ import CartBottomTab from '../../components/common/cartBottomTab';
 import { useNavigation } from '@react-navigation/native';
 import { useHomeData } from '../../hooks/useHomeData';
 import { useSelector } from 'react-redux';
+import SearchBar from '../../components/common/SearchBar';
+import ProductCard from '../../components/Product/ProductCard';
+import { BASE_URL } from '../../api/apiClient';
 
 const HomeScreen = () => {
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+
   const navigation = useNavigation();
   const { banners, deals, categories, loading, error, refetch } = useHomeData();
+
+  const handleSearch = async query => {
+    try {
+      setSearchLoading(true);
+
+      const url = `${BASE_URL}/search?q=${query}`;
+      const response = await fetch(url);
+      const json = await response.json();
+
+      if (json.success) {
+        setSearchResults(json.data || []);
+      } else {
+        setSearchResults([]);
+      }
+    } catch (error) {
+      console.log('Search error:', error);
+      setSearchResults([]);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
 
   const profile = useSelector(state => state.retailer.profile);
   console.log('Redux Profile:', profile);
@@ -30,6 +57,38 @@ const HomeScreen = () => {
             <>
               <Header />
 
+              {/* 🔍 SEARCH BAR */}
+              <SearchBar onSearch={handleSearch} loading={searchLoading} />
+
+              {/* 🔎 SEARCH RESULTS */}
+              {searchResults.length > 0 && (
+                <View style={{ paddingHorizontal: 16 }}>
+                  <FlatList
+                    data={searchResults}
+                    keyExtractor={item => item.productId}
+                    numColumns={2}
+                    columnWrapperStyle={{
+                      justifyContent: 'space-between',
+                      marginBottom: 16,
+                    }}
+                    renderItem={({ item }) => (
+                      <ProductCard
+                        item={{
+                          productId: item.productId,
+                          name: item.name,
+                          image: item.images?.[0],
+                          description: item.description,
+                          pricing: item.pricing,
+                          quantity: item.quantity,
+                        }}
+                      />
+                    )}
+                    scrollEnabled={false}
+                  />
+                </View>
+              )}
+
+              {/* 🏠 NORMAL HOMEPAGE CONTENT */}
               <BannerCarousel
                 data={banners}
                 loading={loading}
@@ -77,7 +136,6 @@ const HomeScreen = () => {
             </>
           }
         />
-        <CartBottomTab />
       </View>
     </AppSafeArea>
   );

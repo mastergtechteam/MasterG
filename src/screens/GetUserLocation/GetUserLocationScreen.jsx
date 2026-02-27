@@ -57,8 +57,7 @@ export default function GetUserLocationScreen({ navigation }) {
       setFetchedLocation(location);
 
       const addressData = {
-        line1: '',
-        line2: '',
+        line1: location.address || '',
         area: location.area,
         city: location.city,
         state: location.state,
@@ -96,17 +95,23 @@ export default function GetUserLocationScreen({ navigation }) {
     }
   }, [pincode, isValidPincode, navigation]);
 
-  const handleContinueWithLocation = useCallback(() => {
+  const handleContinueWithLocation = useCallback(async () => {
     if (!fetchedLocation) {
       Alert.alert('No Location', 'Please fetch location first');
       return;
     }
 
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'App' }],
-    });
-  }, [fetchedLocation, navigation]);
+    const result = await checkServiceAvailability(fetchedLocation.pincode);
+
+    if (result.service_available) {
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'App' }],
+      });
+    } else {
+      Alert.alert('Service Not Available', result.message);
+    }
+  }, [fetchedLocation, navigation, checkServiceAvailability]);
 
   const checkServiceAvailability = useCallback(async pincode => {
     setCheckingService(true);
@@ -285,6 +290,10 @@ export default function GetUserLocationScreen({ navigation }) {
                   </View>
 
                   <View style={styles.locationDetails}>
+                    <LocationRow
+                      label="Address"
+                      value={fetchedLocation.address}
+                    />
                     <LocationRow label="Area" value={fetchedLocation.area} />
                     <LocationRow label="City" value={fetchedLocation.city} />
                     <LocationRow label="State" value={fetchedLocation.state} />

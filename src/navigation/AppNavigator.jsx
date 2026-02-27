@@ -10,6 +10,7 @@ import CartScreen from '../screens/Cart/CartScreen';
 import SearchScreen from '../screens/search/SearchScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import ViewOrderScreen from '../screens/Order/ViewOrderScreen';
+import EditProfileScreen from '../screens/Profile/EditProfileScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -29,6 +30,7 @@ export default function AppNavigator() {
       <Stack.Screen name="Search" component={SearchScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
       <Stack.Screen name="ViewOrder" component={ViewOrderScreen} />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} />
     </Stack.Navigator>
   );
 }

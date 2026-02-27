@@ -22,14 +22,28 @@ const ProductCard = ({ item }) => {
   const cartItem = useSelector(selectCartItemById(item.productId));
   const inCartQuantity = cartItem?.quantity ?? 0;
 
+  const MAX_LIMIT_PER_ITEM = 10;
+  const availableStock = item.stock?.availableQuantity ?? 0;
+  const isOutOfStock = item.stock?.outOfStock ?? false;
+
+  // This is the real max user can add
+  const maxAllowedQuantity = Math.min(MAX_LIMIT_PER_ITEM, availableStock);
+
   const showMaxToast = () => {
-    if (Platform.OS === 'android') {
-      ToastAndroid.show(
-        'Only 10 items allowed per product',
-        ToastAndroid.SHORT,
-      );
+    let message = '';
+
+    if (availableStock === 0 || isOutOfStock) {
+      message = 'Product is out of stock';
+    } else if (availableStock < MAX_LIMIT_PER_ITEM) {
+      message = `Only ${availableStock} items available`;
     } else {
-      Alert.alert('Limit Reached', 'Only 10 items allowed per product');
+      message = 'Maximum 10 items allowed per product';
+    }
+
+    if (Platform.OS === 'android') {
+      ToastAndroid.show(message, ToastAndroid.SHORT);
+    } else {
+      Alert.alert('Limit Reached', message);
     }
   };
 
@@ -96,10 +110,11 @@ const ProductCard = ({ item }) => {
 
             <TouchableOpacity
               onPress={() => {
-                if (inCartQuantity >= 10) {
+                if (inCartQuantity >= maxAllowedQuantity) {
                   showMaxToast();
                   return;
                 }
+
                 dispatch(incrementQuantity(item.productId));
               }}
             >

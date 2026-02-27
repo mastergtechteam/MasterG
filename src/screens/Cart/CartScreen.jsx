@@ -1163,6 +1163,8 @@ const CartScreen = () => {
     placingOrder,
   } = useCartScreen();
 
+  console.log(cartItems, 11);
+
   return (
     <SafeAreaView style={styles.container}>
       <Header />

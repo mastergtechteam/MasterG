@@ -2297,7 +2297,7 @@ const styles = StyleSheet.create({
 
   bottomMicContainer: {
     position: 'absolute',
-    bottom: 120,
+    bottom: 150,
     right: 20,
   },
 

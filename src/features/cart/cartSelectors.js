@@ -33,10 +33,12 @@ export const selectCartItemsArray = createSelector([selectCartItems], items =>
  * Total price (memoized)
  */
 export const selectCartTotal = createSelector([selectCartItems], items =>
-  Object.values(items).reduce(
-    (sum, item) => sum + item.product.discountedPrice * item.quantity,
-    0,
-  ),
+  Object.values(items || {}).reduce((sum, item) => {
+    const price = Number(item?.product?.discountedPrice) || 0;
+    const quantity = Number(item?.quantity) || 0;
+
+    return sum + price * quantity;
+  }, 0),
 );
 
 /**
