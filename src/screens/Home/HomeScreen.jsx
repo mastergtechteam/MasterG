@@ -154,7 +154,7 @@ const HomeScreen = () => {
                   flexDirection: 'row',
                   gap: 12,
                   paddingHorizontal: 16,
-                  marginBottom: 16,
+                  marginBottom: 60,
                 }}
               >
                 <ActionCard

@@ -10,6 +10,7 @@ import {
   Platform,
   TouchableOpacity,
   Text,
+  ActivityIndicator,
 } from 'react-native';
 
 import AppSafeArea from '../../components/common/AppSafeArea';
@@ -72,7 +73,18 @@ export default function LoginScreen({ navigation }) {
       });
     } catch (error) {
       console.log('OTP Send Error:', error);
-      Alert.alert('Error', error.message || 'Something went wrong');
+
+      let errorMessage = 'Something went wrong';
+
+      if (error.message?.toLowerCase().includes('10')) {
+        errorMessage = 'Next OTP available after 10 minutes';
+      } else if (error.message?.toLowerCase().includes('already')) {
+        errorMessage = 'OTP already sent. Please wait before requesting again.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      Alert.alert('Error', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -128,9 +140,16 @@ export default function LoginScreen({ navigation }) {
             activeOpacity={0.8}
             disabled={loading}
           >
-            <Text style={styles.OtpButtonTextSelected}>
-              {loading ? 'Sending OTP...' : 'Get OTP'}
-            </Text>
+            {loading ? (
+              <View style={styles.loaderRow}>
+                <ActivityIndicator size="small" color="#000000" />
+                <Text style={styles.OtpButtonTextSelected}>
+                  {'  '}Sending OTP
+                </Text>
+              </View>
+            ) : (
+              <Text style={styles.OtpButtonTextSelected}>Get OTP</Text>
+            )}
           </TouchableOpacity>
 
           {/* <TouchableOpacity
@@ -238,5 +257,10 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.7,
+  },
+  loaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

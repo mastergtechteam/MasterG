@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 13,
     fontWeight: '600',
-    height: 32,
+    height: 34,
   },
   weight: {
     color: '#aaa',
