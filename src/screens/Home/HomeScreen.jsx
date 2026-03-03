@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, FlatList } from 'react-native';
 import AppSafeArea from '../../components/common/AppSafeArea';
 import BannerCarousel from '../../components/Home/BannerCrousel';
@@ -9,16 +9,25 @@ import CategoriesSection from '../../components/Home/CategoriesSection';
 import CartBottomTab from '../../components/common/cartBottomTab';
 import { useNavigation } from '@react-navigation/native';
 import { useHomeData } from '../../hooks/useHomeData';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import SearchBar from '../../components/common/SearchBar';
 import ProductCard from '../../components/Product/ProductCard';
 import { BASE_URL } from '../../api/apiClient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getAuthData } from '../../utils/secureStore';
+import { loadRetailerProfile } from '../../features/profile/retailerSlice';
 
 const HomeScreen = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const dispatch = useDispatch();
 
   const navigation = useNavigation();
+
+  // useEffect(() => {
+  //   getAllStorageData();
+  //   dispatch(loadRetailerProfile());
+  // }, []);
   const { banners, deals, categories, loading, error, refetch } = useHomeData();
 
   const handleSearch = async query => {
@@ -42,6 +51,36 @@ const HomeScreen = () => {
     }
   };
 
+  // const getAllStorageData = async () => {
+  //   try {
+  //     // 1️⃣ Get AsyncStorage data
+  //     const keys = await AsyncStorage.getAllKeys();
+  //     const stores = await AsyncStorage.multiGet(keys);
+
+  //     const asyncData = {};
+  //     stores.forEach(([key, value]) => {
+  //       try {
+  //         asyncData[key] = JSON.parse(value);
+  //       } catch {
+  //         asyncData[key] = value;
+  //       }
+  //     });
+
+  //     // 2️⃣ Get Secure data (token + retailerId)
+  //     const secureData = await getAuthData();
+
+  //     const result = {
+  //       ...asyncData,
+  //       secure: secureData, // { token, retailerId }
+  //     };
+
+  //     console.log('All App Storage Data:', result);
+
+  //     return result;
+  //   } catch (error) {
+  //     console.log('Error fetching storage data:', error);
+  //   }
+  // };
   const profile = useSelector(state => state.retailer.profile);
   console.log('Redux Profile:', profile);
 
@@ -137,6 +176,7 @@ const HomeScreen = () => {
           }
         />
       </View>
+      <CartBottomTab />
     </AppSafeArea>
   );
 };

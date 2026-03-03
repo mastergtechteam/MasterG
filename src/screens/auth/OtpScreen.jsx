@@ -8,35 +8,31 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
-  Text,
   ActivityIndicator,
 } from 'react-native';
 
 import AppSafeArea from '../../components/common/AppSafeArea';
 import AppText from '../../components/common/AppText';
-import AppButton from '../../components/common/AppButton';
 import AppView from '../../components/common/AppView';
-
-import { getAuth, onAuthStateChanged } from '@react-native-firebase/auth';
-import { getConfirmation } from '../../utils/authStore';
 
 import LinearGradient from 'react-native-linear-gradient';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BASE_URL } from '../../api/apiClient';
-import { useDispatch } from 'react-redux';
+import { saveAuthData } from '../../utils/secureStore';
 import { loadRetailerProfile } from '../../features/profile/retailerSlice';
-import { fetchRetailerProfileApi } from '../services/Profile/profileService';
+import { useDispatch } from 'react-redux';
 
 export default function OtpScreen({ navigation, route }) {
   const { mobile } = route.params;
-  const dispatch = useDispatch();
 
-  const confirmation = getConfirmation();
-
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otp, setOtp] = useState(['', '', '', '', '', '']); // 6 digit
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [timer, setTimer] = useState(120);
+  const [resending, setResending] = useState(false);
+  const dispatch = useDispatch();
 
   const inputs = useRef([]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -46,94 +42,120 @@ export default function OtpScreen({ navigation, route }) {
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
-      duration: 1200,
+      duration: 800,
       useNativeDriver: true,
     }).start();
   }, []);
+
+  useEffect(() => {
+    if (timer === 0) return;
+
+    const interval = setInterval(() => {
+      setTimer(prev => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [timer]);
+
+  const formatTime = seconds => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
 
   const handleChange = (value, index) => {
     if (/^\d$/.test(value) || value === '') {
       const newOtp = [...otp];
       newOtp[index] = value;
       setOtp(newOtp);
+      setError('');
 
       if (value && index < 5) {
-        inputs.current[index + 1].focus();
+        inputs.current[index + 1]?.focus();
       }
 
       if (!value && index > 0) {
-        inputs.current[index - 1].focus();
+        inputs.current[index - 1]?.focus();
       }
     }
   };
 
   const handleVerify = async () => {
     const enteredOtp = otp.join('');
-    if (enteredOtp.length !== 6) return;
-    if (!confirmation) return;
+
+    if (enteredOtp.length !== 6) {
+      setError('Please enter 6 digit OTP');
+      return;
+    }
 
     try {
       setLoading(true);
+      setError('');
 
-      const response = await confirmation.confirm(enteredOtp);
+      const response = await fetch(`${BASE_URL}/auth/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mobile: mobile,
+          otp: enteredOtp,
+          // otp: 1111,
+          role: 'RETAILER',
+        }),
+      });
 
-      const uuid = response?.user?._user?.uid;
-      const mobileNumber = response?.user?.phoneNumber;
+      const data = await response.json();
 
-      await AsyncStorage.setItem('user_uuid', uuid);
-      await AsyncStorage.setItem('user_mobile', mobileNumber);
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Verification failed');
+      }
 
-      // 👇 WAIT for retailer to be created/fetched
-      await ensureRetailerExists();
-      await dispatch(loadRetailerProfile(uuid)).unwrap();
-      // 👇 Navigate ONLY after Redux is updated
+      // 🔐 Store token + retailerId securely
+      await saveAuthData(data.token, data.retailer.retailerId);
+      await dispatch(loadRetailerProfile()).unwrap();
+
+      // Store other non-sensitive data
+      await AsyncStorage.setItem('user_mobile', data.user.mobile);
+      await AsyncStorage.setItem('user_role', data.user.role);
+      await AsyncStorage.setItem(
+        'retailer_data',
+        JSON.stringify(data.retailer),
+      );
+
       navigation.replace('GetLocation');
-    } catch (error) {
-      console.log('OTP Verify Error:', error);
+
+      navigation.replace('GetLocation');
+    } catch (err) {
+      setError(err.message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  async function ensureRetailerExists() {
-    const TAG = '[API:OTP]';
-    const baseUrl = `${BASE_URL}/retailers`;
-
+  const handleResendOtp = async () => {
     try {
-      const uuid = await AsyncStorage.getItem('user_uuid');
-      const mobileNumber = await AsyncStorage.getItem('user_mobile');
+      setResending(true);
+      setError('');
 
-      if (!uuid) return;
+      const response = await fetch(`${BASE_URL}/auth/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobile }),
+      });
 
-      const checkResponse = await fetch(`${baseUrl}/${uuid}`);
-      const checkData = await checkResponse.json();
+      const data = await response.json();
 
-      let retailerData;
-
-      if (!checkData.success && checkData.message === 'Retailer not found') {
-        const body = {
-          retailerId: uuid,
-          contact: { mobile: mobileNumber },
-          status: 'ACTIVE',
-        };
-
-        const createResponse = await fetch(baseUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-
-        const createData = await createResponse.json();
-        retailerData = createData?.data;
-      } else {
-        retailerData = checkData?.data;
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to resend OTP');
       }
 
-      return retailerData;
-    } catch (error) {
-      console.error(TAG, error);
+      setTimer(120); // restart timer
+      setOtp(['', '', '', '', '', '']); // clear otp
+    } catch (err) {
+      setError(err.message || 'Unable to resend OTP');
+    } finally {
+      setResending(false);
     }
-  }
+  };
 
   return (
     <AppSafeArea style={{ padding: spacing.lg }}>
@@ -186,6 +208,8 @@ export default function OtpScreen({ navigation, route }) {
             ))}
           </AppView>
 
+          {error ? <AppText style={styles.errorText}>{error}</AppText> : null}
+
           <TouchableOpacity
             style={[styles.OtpButton, loading && styles.buttonDisabled]}
             onPress={handleVerify}
@@ -195,9 +219,23 @@ export default function OtpScreen({ navigation, route }) {
             {loading ? (
               <ActivityIndicator size="small" color="#000000" />
             ) : (
-              <Text style={styles.OtpButtonTextSelected}>Verify & Login</Text>
+              <AppText style={styles.OtpButtonTextSelected}>
+                Verify & Login
+              </AppText>
             )}
           </TouchableOpacity>
+
+          {timer > 0 ? (
+            <AppText style={styles.timerText}>
+              Resend OTP in {formatTime(timer)}
+            </AppText>
+          ) : (
+            <Pressable onPress={handleResendOtp} disabled={resending}>
+              <AppText style={styles.resendText}>
+                {resending ? 'Resending...' : 'Resend OTP'}
+              </AppText>
+            </Pressable>
+          )}
 
           <Pressable onPress={() => navigation.goBack()}>
             <AppText style={styles.changeNumber}>Change number</AppText>
@@ -207,6 +245,7 @@ export default function OtpScreen({ navigation, route }) {
     </AppSafeArea>
   );
 }
+
 const styles = StyleSheet.create({
   content: {
     flex: 1,
@@ -229,6 +268,20 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginBottom: 6,
   },
+  timerText: {
+    textAlign: 'center',
+    opacity: 0.6,
+    marginBottom: 8,
+
+    fontSize: 16,
+    padding: 4,
+  },
+
+  resendText: {
+    textAlign: 'center',
+    fontWeight: '600',
+    marginBottom: 8,
+  },
 
   sentText: {
     opacity: 0.6,
@@ -239,7 +292,7 @@ const styles = StyleSheet.create({
   otpRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    marginBottom: 16,
   },
 
   otpBox: {
@@ -251,8 +304,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
 
-  button: {
-    fontSize: 16,
+  errorText: {
+    color: '#D32F2F',
+    fontSize: 14,
+    marginBottom: 12,
+    textAlign: 'center',
   },
 
   changeNumber: {
@@ -261,6 +317,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginVertical: 10,
   },
+
   divider: {
     width: 160,
     height: 1,
@@ -268,6 +325,7 @@ const styles = StyleSheet.create({
     opacity: 0.9,
     transform: [{ scaleX: 0.85 }],
   },
+
   OtpButton: {
     paddingVertical: 16,
     paddingHorizontal: 10,
@@ -278,11 +336,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
+
   OtpButtonTextSelected: {
     color: '#000000',
     fontSize: 18,
     fontWeight: '600',
   },
+
   buttonDisabled: {
     opacity: 0.7,
   },

@@ -215,7 +215,7 @@ import {
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import Geolocation from '@react-native-community/geolocation';
 
-const GetLocationButton = ({ onLocationFetched }) => {
+const GetLocationButton = ({ onLocationFetched, title }) => {
   const [loading, setLoading] = useState(false);
   const GOOGLE_API_KEY = 'AIzaSyA5pFD_JmbJnZPml2qyjy_YunVy6fD2nUc';
   /* =====================
@@ -427,7 +427,7 @@ const GetLocationButton = ({ onLocationFetched }) => {
           );
       },
       {
-        enableHighAccuracy: false, // network location (cell towers + WiFi) — resolves in 15-70ms
+        enableHighAccuracy: true, // network location (cell towers + WiFi) — resolves in 15-70ms
         timeout: 10000,
         maximumAge: 60000,
       },
@@ -449,7 +449,9 @@ const GetLocationButton = ({ onLocationFetched }) => {
       ) : (
         <View style={styles.content}>
           <FontAwesome6 name="location-crosshairs" size={18} color="#1E7CFF" />
-          <Text style={styles.uploadText}>Auto Fetch Location</Text>
+          <Text style={styles.uploadText}>
+            {title || 'Auto Fetch Location'}
+          </Text>
         </View>
       )}
     </TouchableOpacity>

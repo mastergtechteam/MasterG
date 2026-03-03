@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BASE_URL } from '../api/apiClient';
+import { getAuthData } from '../utils/secureStore';
 
 export const useHomeData = () => {
   const [banners, setBanners] = useState([]);
@@ -18,9 +19,14 @@ export const useHomeData = () => {
       setLoading(true);
       setError(null);
 
+      const authData = await getAuthData();
+      const token = authData?.token;
+
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
       const [dealsRes, categoriesRes] = await Promise.all([
-        fetch(`${BASE_URL}/deals`),
-        fetch(`${BASE_URL}/categories`),
+        fetch(`${BASE_URL}/deals`, { headers }),
+        fetch(`${BASE_URL}/categories`, { headers }),
       ]);
 
       if (!dealsRes.ok || !categoriesRes.ok) {

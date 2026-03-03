@@ -82,9 +82,9 @@ import { fetchRetailerProfileApi } from '../../screens/services/Profile/profileS
 //
 export const loadRetailerProfile = createAsyncThunk(
   'retailer/loadProfile',
-  async (uuid, { rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
-      const data = await fetchRetailerProfileApi(uuid);
+      const data = await fetchRetailerProfileApi();
       return data;
     } catch (error) {
       return rejectWithValue(error.message);

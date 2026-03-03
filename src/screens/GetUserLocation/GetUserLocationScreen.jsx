@@ -53,6 +53,8 @@ export default function GetUserLocationScreen({ navigation }) {
   /* ---------------- STABLE LOCATION HANDLER ---------------- */
 
   const handleLocationFetched = useCallback(async location => {
+    setPincode('');
+
     try {
       setFetchedLocation(location);
 
@@ -68,11 +70,6 @@ export default function GetUserLocationScreen({ navigation }) {
 
       await AsyncStorage.setItem('address', JSON.stringify(addressData));
       await checkServiceAvailability(location.pincode);
-
-      Alert.alert(
-        'Location Fetched',
-        `Area: ${location.area}\nCity: ${location.city}\nState: ${location.state}\nPincode: ${location.pincode}`,
-      );
     } catch (error) {
       console.log('Location Save Error:', error);
     }
@@ -81,6 +78,9 @@ export default function GetUserLocationScreen({ navigation }) {
   /* ---------------- CONTINUE HANDLERS ---------------- */
 
   const handleContinueWithPincode = useCallback(async () => {
+    setFetchedLocation(null);
+    setServiceData(null);
+
     if (!isValidPincode(pincode))
       return Alert.alert(
         'Invalid Pincode',
@@ -254,7 +254,10 @@ export default function GetUserLocationScreen({ navigation }) {
             {isValidPincode(pincode) && (
               <TouchableOpacity
                 style={styles.checkServiceButton}
-                onPress={() => checkServiceAvailability(pincode)}
+                onPress={() => {
+                  setFetchedLocation(null);
+                  checkServiceAvailability(pincode);
+                }}
                 disabled={checkingService}
               >
                 <Text style={styles.checkServiceButtonText}>
@@ -275,7 +278,7 @@ export default function GetUserLocationScreen({ navigation }) {
 
             {/* ---------------- STABLE LAYOUT CONTAINER ---------------- */}
 
-            <View style={{ minHeight: 260 }}>
+            <View>
               {fetchedLocation ? (
                 <View style={styles.locationCard}>
                   <View style={styles.locationCardHeader}>
@@ -302,29 +305,17 @@ export default function GetUserLocationScreen({ navigation }) {
                       value={fetchedLocation.pincode}
                       highlight
                     />
-                    <LocationRow
-                      label="Coordinates"
-                      value={`${fetchedLocation.lat.slice(
-                        0,
-                        8,
-                      )}, ${fetchedLocation.lng.slice(0, 8)}`}
-                      small
-                    />
                   </View>
 
-                  <TouchableOpacity
-                    style={styles.changeLocationButton}
-                    onPress={() => setFetchedLocation(null)}
-                  >
-                    <FontAwesome5 name="redo" size={14} color="#1E7CFF" />
-                    <Text style={styles.changeLocationText}>
-                      Re-fetch Location
-                    </Text>
-                  </TouchableOpacity>
+                  <GetLocationButton
+                    onLocationFetched={handleLocationFetched}
+                    title="Re-fetch Location"
+                  />
 
                   <AppButton
                     title="Continue with Location"
                     onPress={handleContinueWithLocation}
+                    disabled={!serviceData?.service_available}
                     style={styles.continueButton}
                   />
                 </View>
@@ -346,17 +337,13 @@ export default function GetUserLocationScreen({ navigation }) {
 
 /* ---------------- REUSABLE ROW COMPONENT ---------------- */
 
-const LocationRow = ({ label, value, highlight, small }) => (
+const LocationRow = ({ label, value, highlight }) => (
   <View style={styles.locationDetail}>
-    <Text style={styles.locationLabel}>{label}:</Text>
+    <Text style={styles.locationLabel}>{label}</Text>
     <Text
-      style={[
-        highlight
-          ? styles.locationPincode
-          : small
-          ? styles.locationCoords
-          : styles.locationValue,
-      ]}
+      style={[styles.locationValue, highlight && styles.locationPincode]}
+      numberOfLines={2}
+      ellipsizeMode="tail"
     >
       {value || 'N/A'}
     </Text>
@@ -369,7 +356,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background || '#000' },
 
   scrollContent: {
-    flexGrow: 1,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.lg,
   },
@@ -467,12 +453,14 @@ const styles = StyleSheet.create({
   locationDetails: { gap: spacing.md, marginBottom: spacing.lg },
 
   locationDetail: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
   },
 
-  locationLabel: { fontSize: 13, fontWeight: '600', color: '#999' },
-
+  locationLabel: {
+    fontSize: 12,
+    color: '#888',
+    marginBottom: 2,
+  },
   locationValue: {
     fontSize: 14,
     fontWeight: '600',
@@ -480,7 +468,7 @@ const styles = StyleSheet.create({
   },
 
   locationPincode: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
     color: '#1E7CFF',
   },

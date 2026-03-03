@@ -30,6 +30,10 @@ import {
   clearRetailerProfile,
 } from '../../features/profile/retailerSlice';
 
+import * as Keychain from 'react-native-keychain';
+import { clearAuthData } from '../../utils/secureStore';
+import { Platform, ToastAndroid } from 'react-native';
+
 const ProfileScreen = () => {
   const retailer = useSelector(state => state.retailer.profile);
   const loading = useSelector(state => state.retailer.loading);
@@ -56,20 +60,46 @@ const ProfileScreen = () => {
     }));
   };
 
-  const handleLogout = async () => {
-    try {
-      // 1️⃣ Firebase logout
-      await signOut(getAuth());
+  const handleLogout = () => {
+    Alert.alert(
+      'Confirm Logout',
+      'Are you sure you want to logout?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // 1️⃣ Clear secure storage
+              await clearAuthData();
 
-      // 2️⃣ Clear all AsyncStorage
-      await AsyncStorage.clear();
-      dispatch(clearRetailerProfile());
+              // 2️⃣ Clear AsyncStorage (only if you store other app data)
+              await AsyncStorage.clear();
 
-      console.log('🗑️ AsyncStorage Cleared');
-      navigation.replace('Auth');
-    } catch (error) {
-      console.log('Logout Error:', error);
-    }
+              // 3️⃣ Clear Redux
+              dispatch(clearRetailerProfile());
+
+              // 4️⃣ Navigate
+              navigation.replace('Auth');
+
+              if (Platform.OS === 'android') {
+                ToastAndroid.show(
+                  'Logged out successfully',
+                  ToastAndroid.SHORT,
+                );
+              }
+            } catch (error) {
+              console.log('Logout Error:', error);
+            }
+          },
+        },
+      ],
+      { cancelable: true },
+    );
   };
 
   // const handleSettings = () => {
@@ -145,38 +175,51 @@ const ProfileScreen = () => {
     );
   }
 
-  const shouldShowCreateProfile = !retailer || !retailer?.contact?.mobile;
+  const shouldShowCreateProfile =
+    !retailer?.storeName || !retailer?.address?.line1;
+  const profileComplete =
+    !!retailer &&
+    retailer.storeName &&
+    retailer.address &&
+    retailer.address.line1;
+  const profileIncomplete = !!retailer && !profileComplete;
 
   return (
     <AppSafeArea style={styles.container}>
       <GoBackHeader title="Profile Details" showSearch={false} />
 
-      {shouldShowCreateProfile ? (
-        <AppView style={styles.incompleteBox}>
-          <MaterialIcons
-            name="person-add-alt-1"
-            size={26}
-            color={colors.warning}
-          />
+      <AppView style={styles.contentWrapper}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {/* banner area */}
+          {shouldShowCreateProfile ? (
+            <AppView style={styles.incompleteBox}>
+              <MaterialIcons
+                name="person-add-alt-1"
+                size={26}
+                color={colors.warning}
+              />
 
-          <AppText style={styles.incompleteTitle}>Create Your Profile</AppText>
+              <AppText style={styles.incompleteTitle}>
+                Create Your Profile
+              </AppText>
 
-          <AppText style={styles.incompleteSub}>
-            Complete your profile to start managing your shop, track orders, and
-            unlock all features.
-          </AppText>
+              <AppText style={styles.incompleteSub}>
+                Complete your profile to start managing your shop, track orders,
+                and unlock all features.
+              </AppText>
 
-          <TouchableOpacity
-            style={styles.completeBtn}
-            onPress={() => navigation.navigate('Register')}
-            activeOpacity={0.8}
-          >
-            <AppText style={styles.completeBtnText}>Create Profile</AppText>
-          </TouchableOpacity>
-        </AppView>
-      ) : (
-        <>
-          {retailer && isProfileIncomplete(retailer) && (
+              <TouchableOpacity
+                style={styles.completeBtn}
+                onPress={() => navigation.navigate('Register')}
+                activeOpacity={0.8}
+              >
+                <AppText style={styles.completeBtnText}>Create Profile</AppText>
+              </TouchableOpacity>
+            </AppView>
+          ) : profileIncomplete ? (
             <AppView style={styles.incompleteBox}>
               <MaterialIcons
                 name="error-outline"
@@ -203,346 +246,356 @@ const ProfileScreen = () => {
                 </AppText>
               </TouchableOpacity>
             </AppView>
-          )}
+          ) : null}
 
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollContent}
-          >
-            {/* Profile Header */}
-            <AppView style={styles.profileSection}>
-              <AppView style={styles.profileImageContainer}>
-                {retailer?.shop_image ? (
-                  <Image
-                    source={{ uri: retailer.shop_image }}
-                    style={styles.profileImage}
-                  />
-                ) : (
-                  <View style={styles.profileImagePlaceholder}>
-                    <MaterialCommunityIcons
-                      name="store"
-                      size={48}
-                      color={colors.primary}
+          {/* profile content shows whenever retailer exists and not in create-profile mode */}
+          {retailer && !shouldShowCreateProfile && (
+            <>
+              {/* Profile Header */}
+              <AppView style={styles.profileSection}>
+                <AppView style={styles.profileImageContainer}>
+                  {retailer?.shop_image ? (
+                    <Image
+                      source={{ uri: retailer.shop_image }}
+                      style={styles.profileImage}
                     />
-                  </View>
-                )}
-              </AppView>
-
-              <AppView style={styles.profileInfo}>
-                <AppText style={styles.ownerName}>
-                  {retailer?.ownerName || retailer?.retailerId}
-                </AppText>
-                <AppText style={styles.storeName}>
-                  {retailer?.storeName || ''}
-                </AppText>
-                <AppView style={styles.mobileSection}>
-                  <MaterialIcons
-                    name="phone"
-                    size={14}
-                    color={colors.textSecondary}
-                  />
-                  <AppText style={styles.mobileNumber}>
-                    {retailer?.contact?.mobile}
-                  </AppText>
+                  ) : (
+                    <View style={styles.profileImagePlaceholder}>
+                      <MaterialCommunityIcons
+                        name="store"
+                        size={48}
+                        color={colors.primary}
+                      />
+                    </View>
+                  )}
                 </AppView>
-                {retailer?.status && (
-                  <AppView
-                    style={[
-                      styles.statusBadge,
-                      {
-                        backgroundColor:
-                          retailer.status === 'ACTIVE'
-                            ? colors.success + '20'
-                            : colors.warning + '20',
-                      },
-                    ]}
-                  >
-                    <View
+
+                <AppView style={styles.profileInfo}>
+                  <AppText style={styles.ownerName}>
+                    {retailer?.ownerName || retailer?.retailerId}
+                  </AppText>
+                  <AppText style={styles.storeName}>
+                    {retailer?.storeName || ''}
+                  </AppText>
+                  <AppView style={styles.mobileSection}>
+                    <MaterialIcons
+                      name="phone"
+                      size={14}
+                      color={colors.textSecondary}
+                    />
+                    <AppText style={styles.mobileNumber}>
+                      {retailer?.contact?.mobile}
+                    </AppText>
+                  </AppView>
+                  {retailer?.status && (
+                    <AppView
                       style={[
-                        styles.statusDot,
+                        styles.statusBadge,
                         {
                           backgroundColor:
                             retailer.status === 'ACTIVE'
-                              ? colors.success
-                              : colors.warning,
-                        },
-                      ]}
-                    />
-                    <AppText
-                      style={[
-                        styles.statusText,
-                        {
-                          color:
-                            retailer.status === 'ACTIVE'
-                              ? colors.success
-                              : colors.warning,
+                              ? colors.success + '20'
+                              : colors.warning + '20',
                         },
                       ]}
                     >
-                      {retailer.status}
-                    </AppText>
-                  </AppView>
-                )}
+                      <View
+                        style={[
+                          styles.statusDot,
+                          {
+                            backgroundColor:
+                              retailer.status === 'ACTIVE'
+                                ? colors.success
+                                : colors.warning,
+                          },
+                        ]}
+                      />
+                      <AppText
+                        style={[
+                          styles.statusText,
+                          {
+                            color:
+                              retailer.status === 'ACTIVE'
+                                ? colors.success
+                                : colors.warning,
+                          },
+                        ]}
+                      >
+                        {retailer.status}
+                      </AppText>
+                    </AppView>
+                  )}
+                </AppView>
               </AppView>
-            </AppView>
 
-            {/* Shop Details Section */}
-            <ExpandableSection
-              title="Shop Details"
-              section="shop"
-              icon={
-                <MaterialIcons name="store" size={20} color={colors.primary} />
-              }
-            >
-              <InfoItem
-                label="Shop Name"
-                value={retailer?.storeName}
+              {/* Shop Details Section */}
+              <ExpandableSection
+                title="Shop Details"
+                section="shop"
                 icon={
                   <MaterialIcons
-                    name="storefront"
-                    size={16}
+                    name="store"
+                    size={20}
                     color={colors.primary}
                   />
                 }
-              />
-              <View style={styles.divider} />
-              <InfoItem
-                label="Owner Name"
-                value={retailer?.ownerName}
-                icon={
-                  <MaterialIcons
-                    name="person"
-                    size={16}
-                    color={colors.primary}
-                  />
-                }
-              />
-              <View style={styles.divider} />
-              <InfoItem
-                label="Shop ID"
-                value={retailer?.retailerId}
-                icon={
-                  <MaterialIcons
-                    name="badge"
-                    size={16}
-                    color={colors.primary}
-                  />
-                }
-              />
-            </ExpandableSection>
-
-            {/* Delivery Address Section */}
-            <ExpandableSection
-              title="Delivery Address"
-              section="address"
-              icon={
-                <Entypo name="location-pin" size={20} color={colors.primary} />
-              }
-            >
-              <InfoItem
-                label="Address Line 1"
-                value={retailer?.address?.line1}
-                icon={
-                  <MaterialIcons
-                    name="location-on"
-                    size={16}
-                    color={colors.primary}
-                  />
-                }
-              />
-              <View style={styles.divider} />
-              <InfoItem
-                label="Address Line 2"
-                value={retailer?.address?.line2}
-              />
-              <View style={styles.divider} />
-              <InfoItem label="Area" value={retailer?.address?.area} />
-              <View style={styles.divider} />
-              <InfoItem label="City" value={retailer?.address?.city} />
-              <View style={styles.divider} />
-              <InfoItem label="State" value={retailer?.address?.state} />
-              <View style={styles.divider} />
-              <InfoItem label="Pincode" value={retailer?.address?.pincode} />
-              <View style={styles.divider} />
-              <InfoItem
-                label="Email"
-                value={retailer?.contact?.email}
-                icon={
-                  <MaterialIcons
-                    name="email"
-                    size={16}
-                    color={colors.primary}
-                  />
-                }
-              />
-              <View style={styles.divider} />
-              <InfoItem
-                label="Alternate Mobile"
-                value={retailer?.contact?.alternateMobile}
-                icon={
-                  <MaterialIcons
-                    name="phone"
-                    size={16}
-                    color={colors.primary}
-                  />
-                }
-              />
-            </ExpandableSection>
-
-            {/* PAN/GST Section */}
-            <ExpandableSection
-              title="PAN / GST"
-              section="documents"
-              icon={
-                <MaterialIcons
-                  name="description"
-                  size={20}
-                  color={colors.primary}
-                />
-              }
-            >
-              {retailer?.documents?.panNumber ||
-              retailer?.documents?.gstNumber ||
-              retailer?.pancard ||
-              retailer?.documents?.panImage ||
-              retailer?.documents?.gstImage ? (
-                <>
-                  {retailer?.documents?.panNumber && (
-                    <>
-                      <InfoItem
-                        label="PAN Number"
-                        value={retailer.documents.panNumber}
-                        icon={
-                          <MaterialIcons
-                            name="badge"
-                            size={16}
-                            color={colors.primary}
-                          />
-                        }
-                      />
-                      <View style={styles.divider} />
-                    </>
-                  )}
-
-                  {retailer?.documents?.gstNumber && (
-                    <>
-                      <InfoItem
-                        label="GST Number"
-                        value={retailer.documents.gstNumber}
-                        icon={
-                          <MaterialIcons
-                            name="receipt"
-                            size={16}
-                            color={colors.primary}
-                          />
-                        }
-                      />
-                      <View style={styles.divider} />
-                    </>
-                  )}
-
-                  {retailer?.pancard && (
-                    <>
-                      <AppText style={{ marginBottom: 8 }}>PAN Image</AppText>
-                      <Image
-                        source={{ uri: retailer.pancard }}
-                        style={styles.documentImage}
-                      />
-                      <View style={styles.divider} />
-                    </>
-                  )}
-
-                  {retailer?.documents?.gstImage && (
-                    <>
-                      <AppText style={{ marginBottom: 8 }}>GST Image</AppText>
-                      <Image
-                        source={{ uri: retailer.documents.gstImage }}
-                        style={styles.documentImage}
-                      />
-                    </>
-                  )}
-                </>
-              ) : (
-                <TouchableOpacity
-                  style={styles.emptyDocumentBox}
-                  onPress={handlePanGst}
-                  activeOpacity={0.7}
-                >
-                  <MaterialIcons
-                    name="info-outline"
-                    size={32}
-                    color={colors.warning}
-                  />
-                  <AppText style={styles.emptyDocumentText}>
-                    PAN/GST details not added yet
-                  </AppText>
-                  <AppText style={styles.emptyDocumentSubText}>
-                    Tap to add your documents
-                  </AppText>
-                </TouchableOpacity>
-              )}
-            </ExpandableSection>
-
-            {/* Shop Image Section */}
-            <ExpandableSection
-              title="Shop Image"
-              section="shopImage"
-              icon={
-                <MaterialIcons name="image" size={20} color={colors.primary} />
-              }
-            >
-              <AppView style={styles.shopImageContainer}>
-                {retailer?.shop_image ? (
-                  <Image
-                    source={{ uri: retailer.shop_image }}
-                    style={styles.shopImageDisplay}
-                  />
-                ) : (
-                  <View style={styles.shopImagePlaceholder}>
-                    <MaterialCommunityIcons
-                      name="image-off"
-                      size={48}
-                      color={colors.textMuted}
+              >
+                <InfoItem
+                  label="Shop Name"
+                  value={retailer?.storeName}
+                  icon={
+                    <MaterialIcons
+                      name="storefront"
+                      size={16}
+                      color={colors.primary}
                     />
-                    <AppText style={styles.shopImagePlaceholderText}>
-                      No shop image available
+                  }
+                />
+                <View style={styles.divider} />
+                <InfoItem
+                  label="Owner Name"
+                  value={retailer?.ownerName}
+                  icon={
+                    <MaterialIcons
+                      name="person"
+                      size={16}
+                      color={colors.primary}
+                    />
+                  }
+                />
+                <View style={styles.divider} />
+                <InfoItem
+                  label="Shop ID"
+                  value={retailer?.retailerId}
+                  icon={
+                    <MaterialIcons
+                      name="badge"
+                      size={16}
+                      color={colors.primary}
+                    />
+                  }
+                />
+              </ExpandableSection>
+
+              {/* Delivery Address Section */}
+              <ExpandableSection
+                title="Delivery Address"
+                section="address"
+                icon={
+                  <Entypo
+                    name="location-pin"
+                    size={20}
+                    color={colors.primary}
+                  />
+                }
+              >
+                <InfoItem
+                  label="Address Line 1"
+                  value={retailer?.address?.line1}
+                  icon={
+                    <MaterialIcons
+                      name="location-on"
+                      size={16}
+                      color={colors.primary}
+                    />
+                  }
+                />
+                <View style={styles.divider} />
+                <InfoItem
+                  label="Address Line 2"
+                  value={retailer?.address?.line2}
+                />
+                <View style={styles.divider} />
+                <InfoItem label="Area" value={retailer?.address?.area} />
+                <View style={styles.divider} />
+                <InfoItem label="City" value={retailer?.address?.city} />
+                <View style={styles.divider} />
+                <InfoItem label="State" value={retailer?.address?.state} />
+                <View style={styles.divider} />
+                <InfoItem label="Pincode" value={retailer?.address?.pincode} />
+                <View style={styles.divider} />
+                <InfoItem
+                  label="Email"
+                  value={retailer?.contact?.email}
+                  icon={
+                    <MaterialIcons
+                      name="email"
+                      size={16}
+                      color={colors.primary}
+                    />
+                  }
+                />
+                <View style={styles.divider} />
+                <InfoItem
+                  label="Alternate Mobile"
+                  value={retailer?.contact?.alternateMobile}
+                  icon={
+                    <MaterialIcons
+                      name="phone"
+                      size={16}
+                      color={colors.primary}
+                    />
+                  }
+                />
+              </ExpandableSection>
+
+              {/* PAN/GST Section */}
+              <ExpandableSection
+                title="PAN / GST"
+                section="documents"
+                icon={
+                  <MaterialIcons
+                    name="description"
+                    size={20}
+                    color={colors.primary}
+                  />
+                }
+              >
+                {retailer?.documents?.panNumber ||
+                retailer?.documents?.gstNumber ||
+                retailer?.pancard ||
+                retailer?.documents?.panImage ||
+                retailer?.documents?.gstImage ? (
+                  <>
+                    {retailer?.documents?.panNumber && (
+                      <>
+                        <InfoItem
+                          label="PAN Number"
+                          value={retailer.documents.panNumber}
+                          icon={
+                            <MaterialIcons
+                              name="badge"
+                              size={16}
+                              color={colors.primary}
+                            />
+                          }
+                        />
+                        <View style={styles.divider} />
+                      </>
+                    )}
+
+                    {retailer?.documents?.gstNumber && (
+                      <>
+                        <InfoItem
+                          label="GST Number"
+                          value={retailer.documents.gstNumber}
+                          icon={
+                            <MaterialIcons
+                              name="receipt"
+                              size={16}
+                              color={colors.primary}
+                            />
+                          }
+                        />
+                        <View style={styles.divider} />
+                      </>
+                    )}
+
+                    {retailer?.pancard && (
+                      <>
+                        <AppText style={{ marginBottom: 8 }}>PAN Image</AppText>
+                        <Image
+                          source={{ uri: retailer.pancard }}
+                          style={styles.documentImage}
+                        />
+                        <View style={styles.divider} />
+                      </>
+                    )}
+
+                    {retailer?.documents?.gstImage && (
+                      <>
+                        <AppText style={{ marginBottom: 8 }}>GST Image</AppText>
+                        <Image
+                          source={{ uri: retailer.documents.gstImage }}
+                          style={styles.documentImage}
+                        />
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.emptyDocumentBox}
+                    onPress={handlePanGst}
+                    activeOpacity={0.7}
+                  >
+                    <MaterialIcons
+                      name="info-outline"
+                      size={32}
+                      color={colors.warning}
+                    />
+                    <AppText style={styles.emptyDocumentText}>
+                      PAN/GST details not added yet
                     </AppText>
-                  </View>
+                    <AppText style={styles.emptyDocumentSubText}>
+                      Tap to add your documents
+                    </AppText>
+                  </TouchableOpacity>
                 )}
-              </AppView>
-            </ExpandableSection>
+              </ExpandableSection>
 
-            {/* Action Buttons */}
-            <AppView style={styles.actionsContainer}>
-              <TouchableOpacity
-                style={[styles.actionButton, styles.settingsBtn]}
-                onPress={handleSettings}
-                activeOpacity={0.7}
+              {/* Shop Image Section */}
+              <ExpandableSection
+                title="Shop Image"
+                section="shopImage"
+                icon={
+                  <MaterialIcons
+                    name="image"
+                    size={20}
+                    color={colors.primary}
+                  />
+                }
               >
-                <MaterialIcons
-                  name="settings"
-                  size={20}
-                  color={colors.primary}
-                />
-                <AppText style={styles.settingsBtnText}>Settings</AppText>
-              </TouchableOpacity>
+                <AppView style={styles.shopImageContainer}>
+                  {retailer?.shop_image ? (
+                    <Image
+                      source={{ uri: retailer.shop_image }}
+                      style={styles.shopImageDisplay}
+                    />
+                  ) : (
+                    <View style={styles.shopImagePlaceholder}>
+                      <MaterialCommunityIcons
+                        name="image-off"
+                        size={48}
+                        color={colors.textMuted}
+                      />
+                      <AppText style={styles.shopImagePlaceholderText}>
+                        No shop image available
+                      </AppText>
+                    </View>
+                  )}
+                </AppView>
+              </ExpandableSection>
 
-              <TouchableOpacity
-                style={[styles.actionButton, styles.logoutBtn]}
-                onPress={handleLogout}
-                activeOpacity={0.7}
-              >
-                <MaterialCommunityIcons
-                  name="logout"
-                  size={20}
-                  color={colors.error}
-                />
-                <AppText style={styles.logoutBtnText}>Logout</AppText>
-              </TouchableOpacity>
-            </AppView>
-          </ScrollView>
-        </>
-      )}
+              {/* actions placeholder - buttons rendered below */}
+            </>
+          )}
+        </ScrollView>
+
+        {/* actions always at bottom - outside scrollview */}
+        <AppView style={styles.actionsContainer}>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.settingsBtn]}
+            onPress={handleSettings}
+            activeOpacity={0.7}
+          >
+            <MaterialIcons name="settings" size={18} color={colors.primary} />
+            <AppText style={styles.settingsBtnText}>Settings</AppText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionButton, styles.logoutBtn]}
+            onPress={handleLogout}
+            activeOpacity={0.7}
+          >
+            <MaterialCommunityIcons
+              name="logout"
+              size={18}
+              color={colors.error}
+            />
+            <AppText style={styles.logoutBtnText}>Logout</AppText>
+          </TouchableOpacity>
+        </AppView>
+      </AppView>
     </AppSafeArea>
   );
 };
@@ -553,19 +606,21 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    paddingBottom: 60,
+  },
+  contentWrapper: {
+    flex: 1,
   },
   scrollContent: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
-    paddingBottom: spacing.xl,
+    paddingBottom: spacing.lg,
   },
   profileSection: {
     flexDirection: 'row',
     backgroundColor: colors.surface,
     borderRadius: 16,
     padding: spacing.lg,
-    marginBottom: spacing.xl,
+    marginBottom: spacing.lg,
     alignItems: 'center',
   },
   profileImageContainer: {
@@ -630,7 +685,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   sectionContainer: {
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
     backgroundColor: colors.surface,
     borderRadius: 12,
     overflow: 'hidden',
@@ -639,7 +694,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
   },
   sectionHeaderLeft: {
@@ -658,21 +713,23 @@ const styles = StyleSheet.create({
     marginRight: spacing.md,
   },
   sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 13,
+    fontWeight: '700',
     color: colors.textPrimary,
+    letterSpacing: 0.3,
   },
   sectionContent: {
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
   },
   infoItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
+    paddingVertical: spacing.xs,
   },
   infoItemLeft: {
     flexDirection: 'row',
@@ -689,12 +746,13 @@ const styles = StyleSheet.create({
     marginRight: spacing.sm,
   },
   infoLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: colors.textMuted,
     flex: 1,
+    fontWeight: '500',
   },
   infoValue: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
     color: colors.textPrimary,
     textAlign: 'right',
@@ -703,7 +761,7 @@ const styles = StyleSheet.create({
   divider: {
     height: 1,
     backgroundColor: colors.border,
-    marginVertical: spacing.md,
+    marginVertical: spacing.sm,
   },
   emptyDocumentBox: {
     alignItems: 'center',
@@ -748,8 +806,14 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   actionsContainer: {
-    gap: spacing.md,
-    marginTop: spacing.lg,
+    flexDirection: 'row',
+    backgroundColor: colors.background,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    gap: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    marginBottom: 80,
   },
   actionButton: {
     flexDirection: 'row',
@@ -757,7 +821,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: spacing.md,
     borderRadius: 12,
-    gap: spacing.md,
+    gap: spacing.sm,
+    flex: 1,
   },
   settingsBtn: {
     backgroundColor: colors.primary + '15',
@@ -765,8 +830,8 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   settingsBtnText: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 13,
+    fontWeight: '600',
     color: colors.primary,
   },
   logoutBtn: {
@@ -775,13 +840,14 @@ const styles = StyleSheet.create({
     borderColor: colors.error,
   },
   logoutBtnText: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 13,
+    fontWeight: '600',
     color: colors.error,
   },
   incompleteBox: {
     marginHorizontal: spacing.md,
     marginTop: spacing.md,
+    marginBottom: spacing.md,
     padding: spacing.lg,
     borderRadius: 14,
     backgroundColor: colors.warning + '15',

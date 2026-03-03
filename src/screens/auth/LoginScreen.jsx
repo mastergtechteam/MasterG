@@ -20,9 +20,9 @@ import AppView from '../../components/common/AppView';
 import LinearGradient from 'react-native-linear-gradient';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
-import { getAuth, signInWithPhoneNumber } from '@react-native-firebase/auth';
 
 import { setConfirmation } from '../../utils/authStore';
+import { BASE_URL } from '../../api/apiClient';
 
 export default function LoginScreen({ navigation }) {
   const [mobile, setMobile] = useState('');
@@ -50,21 +50,29 @@ export default function LoginScreen({ navigation }) {
     try {
       setLoading(true);
 
-      const fullNumber = `+91${mobile}`;
+      const response = await fetch(`${BASE_URL}/auth/send-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          mobile: mobile, // API expects without +91
+        }),
+      });
 
-      const confirmationResult = await signInWithPhoneNumber(
-        getAuth(),
-        fullNumber,
-      );
+      const data = await response.json();
 
-      setConfirmation(confirmationResult);
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to send OTP');
+      }
 
+      // Navigate to OTP screen
       navigation.navigate('Otp', {
-        mobile: fullNumber,
+        mobile: mobile,
       });
     } catch (error) {
       console.log('OTP Send Error:', error);
-      Alert.alert('Error', error.message);
+      Alert.alert('Error', error.message || 'Something went wrong');
     } finally {
       setLoading(false);
     }

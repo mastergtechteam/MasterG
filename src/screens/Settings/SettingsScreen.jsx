@@ -14,18 +14,55 @@ import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { clearAuthData } from '../../utils/secureStore';
+import { Platform, ToastAndroid } from 'react-native';
+import { useDispatch } from 'react-redux';
 
 const SettingsScreen = () => {
   const navigation = useNavigation();
+  const dispatch = useDispatch();
+
   const handleLogout = () => {
-    Alert.alert('Logout', 'Are you sure you want to logout?', [
-      { text: 'Cancel', onPress: () => {} },
-      {
-        text: 'Logout',
-        onPress: () => console.log('User logged out'),
-        style: 'destructive',
-      },
-    ]);
+    Alert.alert(
+      'Confirm Logout',
+      'Are you sure you want to logout?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // 1️⃣ Clear secure storage
+              await clearAuthData();
+
+              // 2️⃣ Clear AsyncStorage (only if you store other app data)
+              await AsyncStorage.clear();
+
+              // 3️⃣ Clear Redux
+              dispatch(clearRetailerProfile());
+
+              // 4️⃣ Navigate
+              navigation.replace('Auth');
+
+              if (Platform.OS === 'android') {
+                ToastAndroid.show(
+                  'Logged out successfully',
+                  ToastAndroid.SHORT,
+                );
+              }
+            } catch (error) {
+              console.log('Logout Error:', error);
+            }
+          },
+        },
+      ],
+      { cancelable: true },
+    );
   };
 
   const handleReportIssue = () => {

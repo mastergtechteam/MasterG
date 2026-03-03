@@ -10,18 +10,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useDispatch } from 'react-redux';
-import {
-  loadRetailerProfile,
-  setRetailerProfile,
-} from '../../features/profile/retailerSlice';
-import { BASE_URL } from '../../api/apiClient';
+import { loadRetailerProfile } from '../../features/profile/retailerSlice';
+import { getAuthData, clearAuthData } from '../../utils/secureStore';
 
 const SplashScreen = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const logo = require('../../assets/images/light-logo.png');
@@ -32,17 +27,23 @@ const SplashScreen = () => {
 
   const initializeApp = async () => {
     try {
-      const uuid = await AsyncStorage.getItem('user_uuid');
+      const authData = await getAuthData();
 
-      if (!uuid) {
+      if (!authData?.token || !authData?.retailerId) {
         navigation.replace('Auth');
         return;
       }
 
-      await dispatch(loadRetailerProfile(uuid)).unwrap();
+      const resultAction = await dispatch(loadRetailerProfile());
 
-      navigation.replace('App');
+      if (loadRetailerProfile.fulfilled.match(resultAction)) {
+        navigation.replace('App');
+      } else {
+        await clearAuthData();
+        navigation.replace('Auth');
+      }
     } catch (error) {
+      console.log('Splash Error:', error);
       navigation.replace('Auth');
     }
   };

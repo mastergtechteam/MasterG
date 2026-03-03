@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import {
@@ -27,6 +26,7 @@ import { loadRetailerProfile } from '../../features/profile/retailerSlice';
 import RNFS from 'react-native-fs';
 import ImageResizer from 'react-native-image-resizer';
 import GoBackHeader from '../../components/common/GoBackHeader';
+import { getAuthData } from '../../utils/secureStore';
 
 /* =====================
    HELPERS
@@ -201,11 +201,14 @@ const EditProfileScreen = () => {
     try {
       setLoading(true);
 
-      const retailerId = await AsyncStorage.getItem('user_uuid');
-      if (!retailerId) {
+      const authData = await getAuthData();
+
+      if (!authData?.retailerId || !authData?.token) {
         showToast('Please login again');
         return;
       }
+
+      const { retailerId, token } = authData;
 
       setUploadingImage(true);
 
@@ -244,7 +247,6 @@ const EditProfileScreen = () => {
       const payload = {
         storeName: formData.shop_name,
         ownerName: formData.name,
-
         contact: {
           mobile: normalizeIndianMobile(formData.mobile),
           alternateMobile: formData.alternate_mobile
@@ -252,7 +254,6 @@ const EditProfileScreen = () => {
             : null,
           email: formData.email || null,
         },
-
         address: {
           line1: formData.address,
           area: formData.area,
@@ -262,19 +263,19 @@ const EditProfileScreen = () => {
           latitude: formData.lat ? Number(formData.lat) : null,
           longitude: formData.lng ? Number(formData.lng) : null,
         },
-
-        // ✅ IMAGE FIELDS (as backend requires)
         shop_image: shopImageUrl,
         retailer_image: retailerImageUrl || null,
         pancard: panUrl || null,
         aadhar_card: aadharUrl || null,
-
         status: 'ACTIVE',
       };
 
       const response = await fetch(`${BASE_URL}/retailers/${retailerId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`, // 🔥 IMPORTANT
+        },
         body: JSON.stringify(payload),
       });
 
@@ -283,7 +284,7 @@ const EditProfileScreen = () => {
       if (response.ok) {
         showToast('Profile updated successfully ✅');
 
-        await dispatch(loadRetailerProfile(retailerId)).unwrap();
+        await dispatch(loadRetailerProfile()).unwrap();
 
         navigation.reset({
           index: 0,
@@ -305,10 +306,19 @@ const EditProfileScreen = () => {
 
   const fetchRetailerDetails = async () => {
     try {
-      const retailerId = await AsyncStorage.getItem('user_uuid');
+      const authData = await getAuthData();
+      if (!authData?.retailerId || !authData?.token) return;
+
+      const { retailerId, token } = authData;
+
       if (!retailerId) return;
 
-      const response = await fetch(`${BASE_URL}/retailers/${retailerId}`);
+      const response = await fetch(`${BASE_URL}/retailers/${retailerId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
       const json = await response.json();
 
       if (json?.success && json?.data) {

@@ -14,6 +14,7 @@ import Header from '../../components/common/Header';
 import { BASE_URL } from '../../api/apiClient';
 import { useNavigation } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
+import { getAuthData } from '../../utils/secureStore';
 
 export default function InsightsScreen() {
   const [stats, setStats] = useState([]);
@@ -32,13 +33,24 @@ export default function InsightsScreen() {
       setLoading(true);
       setError(null);
 
-      if (!retailerId) {
-        throw new Error('Retailer ID not found');
+      // 🔐 Get token + retailerId from secure storage
+      const authData = await getAuthData();
+
+      const id = retailerId || authData?.retailerId;
+      const token = authData?.token;
+
+      if (!id || !token) {
+        throw new Error('Authentication data missing');
       }
 
-      const url = `${BASE_URL}/retailer/${retailerId}/insights`;
+      const url = `${BASE_URL}/retailer/${id}/insights`;
 
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
       if (!response.ok) {
         throw new Error(`Server Error (${response.status})`);
@@ -83,7 +95,6 @@ export default function InsightsScreen() {
         },
       ]);
 
-      // 🔥 Set Upcoming Price Changes dynamically
       const formattedPriceChanges =
         data?.upcomingPriceChanges?.map((item, index) => ({
           id: index.toString(),

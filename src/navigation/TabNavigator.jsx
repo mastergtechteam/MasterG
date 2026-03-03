@@ -39,7 +39,7 @@ export default function SalesTabNavigator() {
       }}
     >
       <Tab.Screen
-        name="HomeTab"
+        name="Home"
         component={StackNavigator}
         options={{
           tabBarIcon: ({ color, size }) => (
