@@ -29,21 +29,37 @@ const SplashScreen = () => {
     try {
       const authData = await getAuthData();
 
+      // 🔐 No token → go to Auth
       if (!authData?.token || !authData?.retailerId) {
         navigation.replace('Auth');
         return;
       }
 
+      // 📡 Load profile
       const resultAction = await dispatch(loadRetailerProfile());
 
       if (loadRetailerProfile.fulfilled.match(resultAction)) {
-        navigation.replace('App');
+        const profile = resultAction?.payload?.address;
+
+        // ✅ Check location
+        const hasLocation =
+          profile?.pincode !== null &&
+          profile?.pincode !== undefined &&
+          profile?.pincode !== '' &&
+          profile?.pincode !== 0;
+
+        if (hasLocation) {
+          navigation.replace('App'); // 👈 Main App
+        } else {
+          navigation.replace('GetLocation'); // 👈 Ask for location
+        }
       } else {
         await clearAuthData();
         navigation.replace('Auth');
       }
     } catch (error) {
       console.log('Splash Error:', error);
+      await clearAuthData();
       navigation.replace('Auth');
     }
   };

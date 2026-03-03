@@ -427,7 +427,7 @@ const GetLocationButton = ({ onLocationFetched, title }) => {
           );
       },
       {
-        enableHighAccuracy: true, // network location (cell towers + WiFi) — resolves in 15-70ms
+        enableHighAccuracy: false, // network location (cell towers + WiFi) — resolves in 15-70ms
         timeout: 10000,
         maximumAge: 60000,
       },

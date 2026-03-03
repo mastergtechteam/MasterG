@@ -9,6 +9,8 @@ import {
   Platform,
   TouchableOpacity,
   ActivityIndicator,
+  Clipboard,
+  Alert,
 } from 'react-native';
 
 import AppSafeArea from '../../components/common/AppSafeArea';
@@ -23,6 +25,7 @@ import { BASE_URL } from '../../api/apiClient';
 import { saveAuthData } from '../../utils/secureStore';
 import { loadRetailerProfile } from '../../features/profile/retailerSlice';
 import { useDispatch } from 'react-redux';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 export default function OtpScreen({ navigation, route }) {
   const { mobile } = route.params;
@@ -32,10 +35,12 @@ export default function OtpScreen({ navigation, route }) {
   const [error, setError] = useState('');
   const [timer, setTimer] = useState(120);
   const [resending, setResending] = useState(false);
+  const [clipboardOtpFilled, setClipboardOtpFilled] = useState(false);
   const dispatch = useDispatch();
 
   const inputs = useRef([]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const clipboardCheckRef = useRef(null);
 
   const logo = require('../../assets/images/light-logo.png');
 
@@ -46,6 +51,39 @@ export default function OtpScreen({ navigation, route }) {
       useNativeDriver: true,
     }).start();
   }, []);
+
+  // Auto-fetch OTP from clipboard
+  useEffect(() => {
+    const checkClipboard = async () => {
+      if (clipboardOtpFilled) return; // Only fill once per session
+
+      try {
+        const clipboardContent = await Clipboard.getString();
+        // Extract 6-digit OTP from clipboard
+        const otpMatch = clipboardContent.match(/\d{6}/);
+
+        if (otpMatch) {
+          const extractedOtp = otpMatch[0];
+          const otpArray = extractedOtp.split('');
+          setOtp(otpArray);
+          setClipboardOtpFilled(true);
+          // Auto-focus the last input after filling
+          setTimeout(() => inputs.current[5]?.focus(), 100);
+        }
+      } catch (err) {
+        console.log('Clipboard read error:', err);
+      }
+    };
+
+    // Check clipboard after a short delay (user might copy OTP after opening screen)
+    clipboardCheckRef.current = setTimeout(checkClipboard, 500);
+
+    return () => {
+      if (clipboardCheckRef.current) {
+        clearTimeout(clipboardCheckRef.current);
+      }
+    };
+  }, [clipboardOtpFilled]);
 
   useEffect(() => {
     if (timer === 0) return;
@@ -64,27 +102,77 @@ export default function OtpScreen({ navigation, route }) {
   };
 
   const handleChange = (value, index) => {
-    if (/^\d$/.test(value) || value === '') {
-      const newOtp = [...otp];
-      newOtp[index] = value;
+    // Only allow digits and single character input
+    if (!/^\d*$/.test(value)) return;
+
+    const newOtp = [...otp];
+
+    // If user pasted multiple digits
+    if (value.length > 1) {
+      const digits = value
+        .split('')
+        .filter(d => /\d/.test(d))
+        .slice(0, 6 - index);
+      digits.forEach((digit, i) => {
+        if (index + i < 6) {
+          newOtp[index + i] = digit;
+        }
+      });
       setOtp(newOtp);
-      setError('');
+      setError(''); // Clear error when user starts entering
 
-      if (value && index < 5) {
-        inputs.current[index + 1]?.focus();
+      // Auto-focus to the next empty field
+      const nextEmptyIndex = newOtp.findIndex((d, i) => i > index && d === '');
+      if (nextEmptyIndex !== -1) {
+        setTimeout(() => inputs.current[nextEmptyIndex]?.focus(), 50);
+      } else {
+        setTimeout(() => inputs.current[5]?.focus(), 50);
       }
+      return;
+    }
 
-      if (!value && index > 0) {
-        inputs.current[index - 1]?.focus();
+    // Single digit input
+    newOtp[index] = value;
+    setOtp(newOtp);
+    setError(''); // Clear error when user starts entering
+
+    // Move to next field when typing a digit
+    if (value && index < 5) {
+      setTimeout(() => inputs.current[index + 1]?.focus(), 50);
+    }
+  };
+
+  const handleKeyPress = (e, index) => {
+    const { key } = e.nativeEvent;
+
+    if (key === 'Backspace') {
+      const newOtp = [...otp];
+
+      if (otp[index]) {
+        // Clear current digit if it exists
+        newOtp[index] = '';
+        setOtp(newOtp);
+      } else if (index > 0) {
+        // Move to previous field and clear it if current is empty
+        newOtp[index - 1] = '';
+        setOtp(newOtp);
+        setTimeout(() => inputs.current[index - 1]?.focus(), 50);
       }
     }
+  };
+
+  const handleClearOtp = () => {
+    setOtp(['', '', '', '', '', '']);
+    setError('');
+    setClipboardOtpFilled(false);
+    setTimeout(() => inputs.current[0]?.focus(), 100);
   };
 
   const handleVerify = async () => {
     const enteredOtp = otp.join('');
 
     if (enteredOtp.length !== 6) {
-      setError('Please enter 6 digit OTP');
+      setError('Please enter all 6 digits');
       return;
     }
 
@@ -98,7 +186,6 @@ export default function OtpScreen({ navigation, route }) {
         body: JSON.stringify({
           mobile: mobile,
           otp: enteredOtp,
-          // otp: 1111,
           role: 'RETAILER',
         }),
       });
@@ -106,24 +193,43 @@ export default function OtpScreen({ navigation, route }) {
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(data.message || 'Verification failed');
+        // Clear OTP on failure so user can retry
+        setOtp(['', '', '', '', '', '']);
+        setClipboardOtpFilled(false);
+        setTimeout(() => inputs.current[0]?.focus(), 100);
+        throw new Error(
+          data.message || 'OTP verification failed. Please try again.',
+        );
       }
 
       // 🔐 Store token + retailerId securely
       await saveAuthData(data.token, data.retailer.retailerId);
-      await dispatch(loadRetailerProfile()).unwrap();
 
-      // Store other non-sensitive data
+      // Load latest profile from backend
+      const profile = await dispatch(loadRetailerProfile()).unwrap();
+
+      // Store non-sensitive data
       await AsyncStorage.setItem('user_mobile', data.user.mobile);
       await AsyncStorage.setItem('user_role', data.user.role);
       await AsyncStorage.setItem(
         'retailer_data',
-        JSON.stringify(data.retailer),
+        JSON.stringify({
+          pincode: profile.pincode,
+        }),
       );
 
-      navigation.replace('GetLocation');
+      // ✅ Check if pincode exists
+      const hasLocation =
+        profile?.pincode !== null &&
+        profile?.pincode !== undefined &&
+        profile?.pincode !== '' &&
+        profile?.pincode !== 0;
 
-      navigation.replace('GetLocation');
+      if (hasLocation) {
+        navigation.replace('App'); // 👈 Main app screen
+      } else {
+        navigation.replace('GetLocation'); // 👈 Ask for location
+      }
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
     } finally {
@@ -150,6 +256,9 @@ export default function OtpScreen({ navigation, route }) {
 
       setTimer(120); // restart timer
       setOtp(['', '', '', '', '', '']); // clear otp
+      setClipboardOtpFilled(false); // Reset clipboard flag to allow auto-fill for new OTP
+      setError('');
+      setTimeout(() => inputs.current[0]?.focus(), 100);
     } catch (err) {
       setError(err.message || 'Unable to resend OTP');
     } finally {
@@ -184,7 +293,25 @@ export default function OtpScreen({ navigation, route }) {
             padding: spacing.lg,
           }}
         >
-          <AppText style={styles.title}>Enter OTP</AppText>
+          <AppView
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: spacing.lg,
+            }}
+          >
+            <AppText style={styles.title}>Enter OTP</AppText>
+            {otp.join('').length > 0 && (
+              <Pressable onPress={handleClearOtp} hitSlop={10}>
+                <Icon
+                  name="close"
+                  size={24}
+                  color={colors.textSecondary || '#666'}
+                />
+              </Pressable>
+            )}
+          </AppView>
 
           <AppText style={styles.sentText}>Sent to {mobile}</AppText>
 
@@ -195,15 +322,22 @@ export default function OtpScreen({ navigation, route }) {
                 ref={ref => (inputs.current[index] = ref)}
                 value={digit}
                 onChangeText={val => handleChange(val, index)}
+                onKeyPress={e => handleKeyPress(e, index)}
                 keyboardType="number-pad"
-                maxLength={1}
+                maxLength={6} // Allow paste of multiple digits
+                textContentType="oneTimeCode"
+                autoComplete="sms-otp"
+                editable={true}
+                selectTextOnFocus={true}
                 style={[
                   styles.otpBox,
                   {
-                    borderColor: colors.border,
+                    borderColor: error ? '#D32F2F' : colors.border,
                     color: colors.textPrimary,
+                    borderWidth: digit ? 2 : 1.5,
                   },
                 ]}
+                placeholderTextColor={colors.textSecondary || '#999'}
               />
             ))}
           </AppView>
