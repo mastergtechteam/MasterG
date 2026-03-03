@@ -207,6 +207,7 @@ export default function OtpScreen({ navigation, route }) {
 
       // Load latest profile from backend
       const profile = await dispatch(loadRetailerProfile()).unwrap();
+      console.log(profile, 11, profile?.address.pincode);
 
       // Store non-sensitive data
       await AsyncStorage.setItem('user_mobile', data.user.mobile);
@@ -214,16 +215,16 @@ export default function OtpScreen({ navigation, route }) {
       await AsyncStorage.setItem(
         'retailer_data',
         JSON.stringify({
-          pincode: profile.pincode,
+          pincode: profile?.address.pincode,
         }),
       );
 
       // ✅ Check if pincode exists
       const hasLocation =
-        profile?.pincode !== null &&
-        profile?.pincode !== undefined &&
-        profile?.pincode !== '' &&
-        profile?.pincode !== 0;
+        profile?.address?.pincode !== null &&
+        profile?.address?.pincode !== undefined &&
+        profile?.address?.pincode !== '' &&
+        profile?.address?.pincode !== 0;
 
       if (hasLocation) {
         navigation.replace('App'); // 👈 Main app screen
