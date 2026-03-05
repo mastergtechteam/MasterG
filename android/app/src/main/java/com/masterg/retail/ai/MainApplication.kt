@@ -1,4 +1,4 @@
-package com.masterg
+package com.masterg.retail.ai
 
 import android.app.Application
 import com.facebook.react.PackageList

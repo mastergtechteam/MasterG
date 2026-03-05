@@ -1,4 +1,4 @@
-package com.masterg
+package com.masterg.retail.ai
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
