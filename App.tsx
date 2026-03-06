@@ -21,13 +21,18 @@ import { ThemeProvider } from './waste/ThemeContext';
 import { LanguageProvider } from './src/context/LanguageContext';
 import { Provider } from 'react-redux';
 import { store } from './src/app/store';
+import { routingInstrumentation } from './src/config/sentry';
+import { navigationRef } from './src/navigation/navigationRef';
+
 export default function App() {
   return (
     <Provider store={store}>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <ThemeProvider>
           <LanguageProvider>
-            <NavigationContainer>
+            <NavigationContainer
+              ref={navigationRef}
+              onReady={() => routingInstrumentation.registerNavigationContainer(navigationRef)}>
               <RootNavigator />
             </NavigationContainer>
           </LanguageProvider>
