@@ -22,7 +22,6 @@ import LinearGradient from 'react-native-linear-gradient';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 
-import { setConfirmation } from '../../utils/authStore';
 import { BASE_URL } from '../../api/apiClient';
 
 export default function LoginScreen({ navigation }) {

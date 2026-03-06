@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:984006861833:android:1f15274b5242ce74a004d8",
+        "mobilesdk_app_id": "1:984006861833:android:e7f34094862824d4a004d8",
         "android_client_info": {
-          "package_name": "com.masterg"
+          "package_name": "com.masterg.retail.ai"
         }
       },
       "oauth_client": [],
