@@ -136,14 +136,14 @@ export default StyleSheet.create({
     marginBottom: spacing.xs,
   },
   billingAddress: {
-    fontSize: typography.fontSize.sm,
-    color: colors.textSecondary,
+    fontSize: typography.fontSize.md,
+    color: colors.white,
     marginBottom: spacing.xs,
     lineHeight: 18,
   },
   billingZip: {
     fontSize: typography.fontSize.sm,
-    color: colors.textSecondary,
+    color: colors.white,
     fontWeight: '500',
   },
 
@@ -160,6 +160,7 @@ export default StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    // marginTop: spacing.md,
     marginBottom: spacing.md,
     paddingBottom: spacing.md,
     borderBottomWidth: 1,

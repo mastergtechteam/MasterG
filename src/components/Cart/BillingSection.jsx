@@ -7,6 +7,7 @@ import { colors } from '../../theme/colors';
 
 const BillingSection = ({
   billingAddress,
+  ShopName,
   expandedSections,
   toggleSection,
 }) => {
@@ -27,13 +28,26 @@ const BillingSection = ({
       <View style={styles.billingDetails}>
         {billingAddress ? (
           <>
+            {ShopName ? (
+              <Text style={styles.billingAddress}>{ShopName}</Text>
+            ) : null}
+
+            {billingAddress.line1 ? (
+              <Text style={styles.billingAddress}>{billingAddress.line1}</Text>
+            ) : null}
+
             <Text style={styles.billingAddress}>{billingAddress.area}</Text>
-            <Text style={styles.billingAddress}>{billingAddress.city}</Text>
-            <Text style={styles.billingAddress}>{billingAddress.state}</Text>
+
+            <Text style={styles.billingAddress}>
+              {billingAddress.city}, {billingAddress.state}
+            </Text>
+
             <Text style={styles.billingZip}>{billingAddress.pincode}</Text>
           </>
         ) : (
-          <Text style={styles.billingText}>No address saved. Please auto-fetch location first.</Text>
+          <Text style={styles.billingText}>
+            No address saved. Please auto-fetch location first.
+          </Text>
         )}
       </View>
     </ExpandableSection>

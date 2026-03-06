@@ -103,6 +103,7 @@ const ProductsScreen = () => {
           numColumns={2}
           columnWrapperStyle={styles.gridContainer}
           scrollEnabled={false}
+          contentContainerStyle={{ paddingBottom: 100 }}
         />
       </ScrollView>
 

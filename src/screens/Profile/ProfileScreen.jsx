@@ -102,12 +102,10 @@ const ProfileScreen = () => {
     );
   };
 
-  // const handleSettings = () => {
-  //   console.log('⚙️ SETTINGS clicked');
-  // };
   const handleSettings = () => {
     console.log('⚙️ SETTINGS clicked');
-    navigation.openDrawer();
+    // Navigate directly to Settings screen
+    navigation.navigate('Settings');
   };
 
   const handlePanGst = () => {

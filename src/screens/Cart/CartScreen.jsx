@@ -26,6 +26,7 @@ const CartScreen = () => {
     SHIPPING_CHARGE,
     DELIVERY_TIME,
     billingAddress,
+    ShopName,
     expandedSections,
     toggleSection,
     modalVisible,
@@ -58,6 +59,7 @@ const CartScreen = () => {
 
           <BillingSection
             billingAddress={billingAddress}
+            ShopName={ShopName}
             expandedSections={expandedSections}
             toggleSection={toggleSection}
           />

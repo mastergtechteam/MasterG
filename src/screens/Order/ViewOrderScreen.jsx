@@ -83,6 +83,8 @@ const ViewOrderScreen = ({ route, navigation }) => {
         },
       });
 
+      console.log(res.data);
+
       if (res.data.success) {
         setOrderDetails(res.data.data);
       }

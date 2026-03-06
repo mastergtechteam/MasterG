@@ -10,6 +10,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import AppSafeArea from '../../components/common/AppSafeArea';
 import AppText from '../../components/common/AppText';
 import AppButton from '../../components/common/AppButton';
+import GoBackHeader from '../../components/common/GoBackHeader';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
@@ -18,6 +19,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { clearAuthData } from '../../utils/secureStore';
 import { Platform, ToastAndroid } from 'react-native';
 import { useDispatch } from 'react-redux';
+import { clearRetailerProfile } from '../../features/profile/retailerSlice';
 
 const SettingsScreen = () => {
   const navigation = useNavigation();
@@ -101,24 +103,14 @@ const SettingsScreen = () => {
     <AppText style={styles.sectionTitle}>{title}</AppText>
   );
 
-  function handleEditProfile() {
-    navigation.navigate('EditProfile');
-  }
-
   return (
-    <AppSafeArea>
+    <AppSafeArea style={styles.container}>
+      <GoBackHeader title="Settings" showSearch={false} />
+
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <AppText style={styles.headerTitle}>Settings</AppText>
-          <AppText color="textSecondary" style={styles.headerSubtitle}>
-            Manage your preferences
-          </AppText>
-        </View>
-
         {/* Account Settings Section */}
         <View style={styles.section}>
           <SectionTitle title="ACCOUNT" />
@@ -126,7 +118,7 @@ const SettingsScreen = () => {
             <SettingItem
               icon="account-circle"
               label="Edit Profile"
-              onPress={handleEditProfile}
+              onPress={() => navigation.navigate('EditProfile')}
             />
           </View>
         </View>
@@ -149,6 +141,28 @@ const SettingsScreen = () => {
               icon="bug-report"
               label="Report an Issue"
               onPress={handleReportIssue}
+            />
+          </View>
+        </View>
+
+        {/* Legal Section */}
+        <View style={styles.section}>
+          <SectionTitle title="LEGAL" />
+          <View style={styles.sectionContent}>
+            <SettingItem
+              icon="file-document"
+              label="Terms & Conditions"
+              onPress={() => navigation.navigate('TermsAndConditions')}
+            />
+            <SettingItem
+              icon="shield-account"
+              label="Privacy Policy"
+              onPress={() => navigation.navigate('PrivacyPolicy')}
+            />
+            <SettingItem
+              icon="undo"
+              label="Refund Policy"
+              onPress={() => navigation.navigate('RefundPolicy')}
             />
           </View>
         </View>
@@ -185,23 +199,14 @@ const SettingsScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
-  },
-  header: {
-    marginBottom: spacing.lg,
-  },
-  headerTitle: {
-    fontSize: typography.fontSize.xl,
-    fontWeight: '700',
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  headerSubtitle: {
-    fontSize: typography.fontSize.sm,
-    color: colors.textSecondary,
   },
   section: {
     marginBottom: spacing.lg,
@@ -259,7 +264,9 @@ const styles = StyleSheet.create({
   logoutButton: {
     marginVertical: spacing.lg,
     paddingVertical: spacing.md,
-    backgroundColor: colors.error,
+    // backgroundColor: colors.error,
+    borderWidth: 1,
+    borderColor: colors.error,
     borderRadius: 8,
   },
 });

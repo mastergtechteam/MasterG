@@ -101,7 +101,10 @@ const ProductCard = ({ item }) => {
         {inCartQuantity > 0 ? (
           <View style={styles.quantityContainer}>
             <TouchableOpacity
-              onPress={() => dispatch(decrementQuantity(item.productId))}
+              onPress={e => {
+                e.stopPropagation();
+                dispatch(decrementQuantity(item.productId));
+              }}
             >
               <Text style={styles.quantityText}>−</Text>
             </TouchableOpacity>
@@ -109,7 +112,9 @@ const ProductCard = ({ item }) => {
             <Text style={styles.quantity}>{inCartQuantity}</Text>
 
             <TouchableOpacity
-              onPress={() => {
+              onPress={e => {
+                e.stopPropagation();
+
                 if (inCartQuantity >= maxAllowedQuantity) {
                   showMaxToast();
                   return;
@@ -124,7 +129,10 @@ const ProductCard = ({ item }) => {
         ) : (
           <TouchableOpacity
             style={styles.addButton}
-            onPress={() => dispatch(addToCart(mapProductToCartItem(item)))}
+            onPress={e => {
+              e.stopPropagation();
+              dispatch(addToCart(mapProductToCartItem(item)));
+            }}
           >
             <Ionicons name="add" size={18} color="#000" />
             <Text style={styles.addButtonText}>Add Now</Text>

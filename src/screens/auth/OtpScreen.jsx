@@ -35,7 +35,10 @@ export default function OtpScreen({ navigation, route }) {
   const [error, setError] = useState('');
   const [timer, setTimer] = useState(120);
   const [resending, setResending] = useState(false);
-  const [clipboardOtpFilled, setClipboardOtpFilled] = useState(false);
+
+  // clipboard-related states
+  const [clipboardOtp, setClipboardOtp] = useState(''); // holds suggestion if OTP found
+  const [clipboardOtpFilled, setClipboardOtpFilled] = useState(false); // tracks if user already used paste
   const dispatch = useDispatch();
 
   const inputs = useRef([]);
@@ -52,30 +55,23 @@ export default function OtpScreen({ navigation, route }) {
     }).start();
   }, []);
 
-  // Auto-fetch OTP from clipboard
+  // Look for OTP in clipboard and offer paste suggestion
   useEffect(() => {
     const checkClipboard = async () => {
-      if (clipboardOtpFilled) return; // Only fill once per session
+      if (clipboardOtp || clipboardOtpFilled) return; // nothing to do once suggestion shown or used
 
       try {
         const clipboardContent = await Clipboard.getString();
-        // Extract 6-digit OTP from clipboard
         const otpMatch = clipboardContent.match(/\d{6}/);
 
         if (otpMatch) {
-          const extractedOtp = otpMatch[0];
-          const otpArray = extractedOtp.split('');
-          setOtp(otpArray);
-          setClipboardOtpFilled(true);
-          // Auto-focus the last input after filling
-          setTimeout(() => inputs.current[5]?.focus(), 100);
+          setClipboardOtp(otpMatch[0]);
         }
       } catch (err) {
         console.log('Clipboard read error:', err);
       }
     };
 
-    // Check clipboard after a short delay (user might copy OTP after opening screen)
     clipboardCheckRef.current = setTimeout(checkClipboard, 500);
 
     return () => {
@@ -83,7 +79,7 @@ export default function OtpScreen({ navigation, route }) {
         clearTimeout(clipboardCheckRef.current);
       }
     };
-  }, [clipboardOtpFilled]);
+  }, [clipboardOtp, clipboardOtpFilled]);
 
   useEffect(() => {
     if (timer === 0) return;
@@ -165,6 +161,7 @@ export default function OtpScreen({ navigation, route }) {
     setOtp(['', '', '', '', '', '']);
     setError('');
     setClipboardOtpFilled(false);
+    setClipboardOtp('');
     setTimeout(() => inputs.current[0]?.focus(), 100);
   };
 
@@ -257,7 +254,8 @@ export default function OtpScreen({ navigation, route }) {
 
       setTimer(120); // restart timer
       setOtp(['', '', '', '', '', '']); // clear otp
-      setClipboardOtpFilled(false); // Reset clipboard flag to allow auto-fill for new OTP
+      setClipboardOtpFilled(false); // Reset clipboard flag to allow suggestion for new OTP
+      setClipboardOtp(''); // clear old suggestion
       setError('');
       setTimeout(() => inputs.current[0]?.focus(), 100);
     } catch (err) {
@@ -344,6 +342,25 @@ export default function OtpScreen({ navigation, route }) {
           </AppView>
 
           {error ? <AppText style={styles.errorText}>{error}</AppText> : null}
+
+          {/* if clipboard OTP suggestion exists, show button */}
+          {clipboardOtp && otp.join('').length === 0 ? (
+            <Pressable
+              style={styles.pasteButton}
+              onPress={() => {
+                // populate fields with clipboard value
+                const arr = clipboardOtp.split('');
+                setOtp(arr);
+                setClipboardOtpFilled(true);
+                setClipboardOtp('');
+                setTimeout(() => inputs.current[5]?.focus(), 100);
+              }}
+            >
+              <AppText style={styles.resendText}>
+                Paste OTP from clipboard
+              </AppText>
+            </Pressable>
+          ) : null}
 
           <TouchableOpacity
             style={[styles.OtpButton, loading && styles.buttonDisabled]}
@@ -451,6 +468,11 @@ const styles = StyleSheet.create({
     opacity: 0.8,
     fontSize: 16,
     marginVertical: 10,
+  },
+
+  pasteButton: {
+    marginBottom: spacing.md,
+    alignItems: 'center',
   },
 
   divider: {

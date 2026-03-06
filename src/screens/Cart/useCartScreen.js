@@ -27,6 +27,7 @@ export const useCartScreen = () => {
 
   const retailerProfile = useSelector(state => state.retailer.profile);
   const billingAddress = retailerProfile?.address;
+  const ShopName = retailerProfile?.storeName || retailerProfile?.ownerName;
 
   const [modalVisible, setModalVisible] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
@@ -106,11 +107,11 @@ export const useCartScreen = () => {
             : FALLBACK_IMAGE,
       })),
 
-      billing: {
-        deliveryCharge: SHIPPING_CHARGE,
-        discount: 0,
-        tax: taxAmount,
-      },
+      // billing: {
+      //   deliveryCharge: SHIPPING_CHARGE,
+      //   discount: 0,
+      //   tax: taxAmount,
+      // },
 
       payment: {
         mode: method,
@@ -141,6 +142,7 @@ export const useCartScreen = () => {
         navigation.replace('Auth');
         return;
       }
+      console.log('payload', orderPayload);
 
       const response = await fetch(`${BASE_URL}/api/v1/order`, {
         method: 'POST',
@@ -240,6 +242,7 @@ export const useCartScreen = () => {
     SHIPPING_CHARGE,
     DELIVERY_TIME,
     billingAddress,
+    ShopName,
     expandedSections,
     toggleSection,
     modalVisible,

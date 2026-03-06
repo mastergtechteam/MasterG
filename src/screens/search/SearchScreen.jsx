@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AppSafeArea from '../../components/common/AppSafeArea';
@@ -18,37 +19,112 @@ import ProductCard from '../../components/Product/ProductCard';
 import { useSelector } from 'react-redux';
 import { selectCartItemsArray } from '../../features/cart/cartSelectors';
 import { BASE_URL } from '../../api/apiClient';
+import { useHomeData } from '../../hooks/useHomeData';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import CartBottomTab from '../../components/common/cartBottomTab';
+
+const RECENT_SEARCHES_KEY = '@app_recent_searches';
+const MAX_RECENT_SEARCHES = 10;
+const SEARCH_EXPIRATION_DAYS = 7;
 
 const SearchScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searchError, setSearchError] = useState(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const [recentSearches, setRecentSearches] = useState([]);
+  const [loadingRecents, setLoadingRecents] = useState(true);
+
   const cartItems = useSelector(selectCartItemsArray);
+  const { banners, deals, categories, error, refetch } = useHomeData();
   const cartItemCount = cartItems.length;
 
-  const recentSearches = [
-    { id: '1', text: 'Organic Vegetables' },
-    { id: '2', text: 'Fresh Dairy' },
-    { id: '3', text: 'Whole Wheat Bread' },
-    { id: '4', text: 'Natural Honey' },
-  ];
+  // Load recent searches on mount
+  useEffect(() => {
+    loadRecentSearches();
+  }, []);
 
-  const trendingSearches = [
-    { id: '1', text: 'Organic Milk', count: '24.2K' },
-    { id: '2', text: 'Basmati Rice', count: '18.5K' },
-    { id: '3', text: 'Free-range Eggs', count: '15.3K' },
-    { id: '4', text: 'Almond Butter', count: '12.8K' },
-    { id: '5', text: 'Greek Yogurt', count: '11.2K' },
-    { id: '6', text: 'Coconut Oil', count: '9.7K' },
-  ];
+  // Load and clean expired searches
+  const loadRecentSearches = async () => {
+    try {
+      setLoadingRecents(true);
+      const stored = await AsyncStorage.getItem(RECENT_SEARCHES_KEY);
+      let searches = stored ? JSON.parse(stored) : [];
 
-  const categories = [
-    { id: '1', name: 'Vegetables', icon: 'leaf' },
-    { id: '2', name: 'Dairy', icon: 'water' },
-    { id: '3', name: 'Grains', icon: 'nutrition' },
-    { id: '4', name: 'Herbs', icon: 'medkit' },
-  ];
+      // Filter out expired searches (older than 7 days)
+      const now = Date.now();
+      const cutoffTime = now - SEARCH_EXPIRATION_DAYS * 24 * 60 * 60 * 1000;
+      searches = searches.filter(item => item.timestamp > cutoffTime);
+
+      // Keep only the most recent searches
+      searches = searches.slice(0, MAX_RECENT_SEARCHES);
+
+      setRecentSearches(searches);
+
+      // Save cleaned list back to storage
+      if (searches.length !== (stored ? JSON.parse(stored).length : 0)) {
+        await AsyncStorage.setItem(
+          RECENT_SEARCHES_KEY,
+          JSON.stringify(searches),
+        );
+      }
+    } catch (error) {
+      console.error('[RecentSearches]', 'Error loading:', error);
+    } finally {
+      setLoadingRecents(false);
+    }
+  };
+
+  // Add search to recent list
+  const addToRecentSearches = async query => {
+    try {
+      const newSearch = {
+        id: Date.now().toString(),
+        text: query,
+        timestamp: Date.now(),
+      };
+
+      let updated = [newSearch, ...recentSearches];
+
+      // Remove duplicates (keep only the latest)
+      updated = updated.filter(
+        (item, index, arr) =>
+          arr.findIndex(
+            x => x.text.toLowerCase() === item.text.toLowerCase(),
+          ) === index,
+      );
+
+      // Limit to max searches
+      updated = updated.slice(0, MAX_RECENT_SEARCHES);
+
+      setRecentSearches(updated);
+      await AsyncStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
+    } catch (error) {
+      console.error('[RecentSearches]', 'Error saving:', error);
+    }
+  };
+
+  // Delete specific recent search
+  const deleteRecentSearch = async itemId => {
+    try {
+      const updated = recentSearches.filter(item => item.id !== itemId);
+      setRecentSearches(updated);
+      await AsyncStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
+    } catch (error) {
+      console.error('[RecentSearches]', 'Error deleting:', error);
+    }
+  };
+
+  // Clear all recent searches
+  const clearAllRecentSearches = async () => {
+    try {
+      setRecentSearches([]);
+      await AsyncStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify([]));
+    } catch (error) {
+      console.error('[RecentSearches]', 'Error clearing:', error);
+    }
+  };
 
   const handleClearSearch = () => {
     setSearchQuery('');
@@ -62,16 +138,29 @@ const SearchScreen = ({ navigation }) => {
     const start = Date.now();
     try {
       setLoading(true);
+      setSearchError(null);
       setHasSearched(true);
 
       const response = await fetch(url);
-      console.log(TAG, `⏱ ${Date.now() - start}ms | status: ${response.status}`);
+      console.log(
+        TAG,
+        `⏱ ${Date.now() - start}ms | status: ${response.status}`,
+      );
+
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+
       const data = await response.json();
       console.log(TAG, `✅ ${data?.data?.length ?? 0} results for "${query}"`);
 
-      setSearchResults(data?.data);
+      setSearchResults(data?.data || []);
+
+      // Add to recent searches after successful search
+      await addToRecentSearches(query);
     } catch (error) {
       console.error(TAG, `❌ Error: ${error.message}`);
+      setSearchError(error.message);
       setSearchResults([]);
     } finally {
       setLoading(false);
@@ -80,45 +169,38 @@ const SearchScreen = ({ navigation }) => {
 
   const handleRecentSearchPress = searchTerm => {
     setSearchQuery(searchTerm);
-  };
-
-  const handleTrendingSearchPress = searchTerm => {
-    setSearchQuery(searchTerm);
+    handleSearchSubmit(searchTerm);
   };
 
   const renderRecentSearch = ({ item }) => (
     <TouchableOpacity
       style={styles.recentSearchItem}
-      activeOpacity={0.6}
+      activeOpacity={0.7}
       onPress={() => handleRecentSearchPress(item.text)}
     >
-      <Ionicons
-        name="time"
-        size={16}
-        color={colors.primary}
-        style={{ marginRight: spacing.md }}
-      />
-      <AppText style={styles.recentSearchText}>{item.text}</AppText>
-      <TouchableOpacity activeOpacity={0.7}>
-        <Ionicons name="close" size={16} color={colors.textMuted} />
+      <View style={styles.recentSearchContent}>
+        <Ionicons
+          name="time-outline"
+          size={18}
+          color={colors.primary}
+          style={{ marginRight: spacing.md }}
+        />
+        <AppText style={styles.recentSearchText} numberOfLines={1}>
+          {item.text}
+        </AppText>
+      </View>
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={() => deleteRecentSearch(item.id)}
+        style={styles.deleteButton}
+      >
+        <Ionicons name="close-circle" size={20} color={colors.textMuted} />
       </TouchableOpacity>
     </TouchableOpacity>
   );
 
-  const renderTrendingSearch = ({ item }) => (
-    <TouchableOpacity
-      style={styles.trendingCard}
-      activeOpacity={0.7}
-      onPress={() => handleTrendingSearchPress(item.text)}
-    >
-      <View style={styles.trendingContent}>
-        <View style={styles.trendingTextWrapper}>
-          <AppText style={styles.trendingTitle}>{item.text}</AppText>
-          <AppText style={styles.trendingCount}>{item.count} searches</AppText>
-        </View>
-        <Ionicons name="arrow-forward" size={18} color={colors.primary} />
-      </View>
-    </TouchableOpacity>
+  const renderRecentSearchSeparator = () => (
+    <View style={styles.recentSearchDivider} />
   );
 
   const renderCategory = ({ item }) => (
@@ -179,58 +261,69 @@ const SearchScreen = ({ navigation }) => {
             ListHeaderComponent={
               <>
                 {/* Recent Section */}
-                <View style={styles.section}>
-                  <View style={styles.sectionHeader}>
-                    <AppText style={styles.sectionTitle}>Recent</AppText>
+                {!loadingRecents && recentSearches.length > 0 && (
+                  <View style={styles.section}>
+                    <View style={styles.sectionHeader}>
+                      <AppText style={styles.sectionTitle}>
+                        Recent Searches
+                      </AppText>
+                      <TouchableOpacity onPress={clearAllRecentSearches}>
+                        <AppText style={styles.clearLink}>Clear all</AppText>
+                      </TouchableOpacity>
+                    </View>
+                    <FlatList
+                      data={recentSearches}
+                      renderItem={renderRecentSearch}
+                      keyExtractor={item => item.id}
+                      scrollEnabled={false}
+                      ItemSeparatorComponent={renderRecentSearchSeparator}
+                      style={styles.recentList}
+                    />
                   </View>
-                  <View style={styles.recentList}>
-                    {recentSearches.map((item, index) => (
-                      <View key={item.id}>
-                        {renderRecentSearch({ item })}
-                        {index < recentSearches.length - 1 && (
-                          <View style={styles.divider} />
-                        )}
-                      </View>
-                    ))}
-                  </View>
-                </View>
-
-                {/* Trending Section */}
-                <View style={styles.section}>
-                  <View style={styles.sectionHeaderTrending}>
-                    <Ionicons name="flame" size={20} color={colors.primary} />
-                    <AppText style={styles.sectionTitle}>Trending Now</AppText>
-                  </View>
-                  <FlatList
-                    scrollEnabled={false}
-                    data={trendingSearches}
-                    keyExtractor={item => item.id}
-                    renderItem={renderTrendingSearch}
-                    ItemSeparatorComponent={() => (
-                      <View style={{ height: 8 }} />
-                    )}
-                  />
-                </View>
+                )}
 
                 {/* Categories Section */}
-                <CategoriesSection />
+                <CategoriesSection
+                  data={categories}
+                  loading={loading}
+                  error={error}
+                  onRetry={refetch}
+                />
               </>
             }
           />
         ) : loading ? (
           <View style={styles.loaderContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
+            <AppText style={styles.loadingText}>Searching...</AppText>
+          </View>
+        ) : searchError ? (
+          <View style={styles.errorContainer}>
+            <Ionicons
+              name="alert-circle-outline"
+              size={56}
+              color={colors.textMuted}
+              style={{ marginBottom: spacing.lg }}
+            />
+            <AppText style={styles.errorTitle}>Search Failed</AppText>
+            <AppText style={styles.errorSubtitle}>{searchError}</AppText>
+            <TouchableOpacity
+              style={styles.retryButton}
+              onPress={() => handleSearchSubmit(searchQuery)}
+            >
+              <AppText style={styles.retryButtonText}>Try Again</AppText>
+            </TouchableOpacity>
           </View>
         ) : searchResults.length > 0 ? (
           <FlatList
             data={searchResults}
+            renderItem={({ item }) => <ProductCard item={item} />}
             keyExtractor={item => item.productId}
             numColumns={2}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 20 }}
-            renderItem={({ item }) => <ProductCard item={item} />}
             columnWrapperStyle={styles.gridContainer}
-            scrollEnabled={false}
+            scrollEnabled={true}
+            contentContainerStyle={{ paddingBottom: 140 }}
+            showsVerticalScrollIndicator={false}
           />
         ) : (
           <View style={styles.emptyState}>
@@ -248,25 +341,7 @@ const SearchScreen = ({ navigation }) => {
         )}
       </View>
 
-      {/* Bottom Cart Tab */}
-      {cartItemCount > 0 && (
-        <View style={styles.cartTab}>
-          <View style={styles.cartInfo}>
-            <AppText style={styles.cartCount}>
-              {cartItemCount} item{cartItemCount !== 1 ? 's' : ''}
-            </AppText>
-            <AppText style={styles.cartLabel}>in cart</AppText>
-          </View>
-
-          <TouchableOpacity
-            style={styles.viewCartButton}
-            onPress={() => navigation.navigate('Cart')}
-          >
-            <AppText style={styles.viewCartText}>View Cart</AppText>
-            <Ionicons name="chevron-forward" size={18} color="#000" />
-          </TouchableOpacity>
-        </View>
-      )}
+      <CartBottomTab />
     </AppSafeArea>
   );
 };
@@ -283,10 +358,51 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+
+  loadingText: {
+    fontSize: typography.fontSize.md,
+    color: colors.textSecondary,
+    marginTop: spacing.md,
+  },
+
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+  },
+
+  errorTitle: {
+    fontSize: typography.fontSize.lg,
+    fontWeight: '600',
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
+  },
+
+  errorSubtitle: {
+    fontSize: typography.fontSize.md,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+  },
+
+  retryButton: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderRadius: 10,
+    marginTop: spacing.md,
+  },
+
+  retryButtonText: {
+    color: '#fff',
+    fontSize: typography.fontSize.md,
+    fontWeight: '600',
+  },
   gridContainer: {
+    marginVertical: 10,
     paddingHorizontal: 16,
     justifyContent: 'space-between',
-    marginVertical: 10,
   },
   // Header
   header: {
@@ -365,13 +481,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
 
-  sectionHeaderTrending: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.md,
-  },
-
   sectionTitle: {
     fontSize: typography.fontSize.lg,
     fontWeight: '600',
@@ -391,58 +500,49 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
   },
 
   recentSearchItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.md + 2,
+  },
+
+  recentSearchContent: {
+    // flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 
   recentSearchText: {
-    flex: 1,
+    // flex: 1,
     fontSize: typography.fontSize.md,
     color: colors.textPrimary,
     fontWeight: '500',
+  },
+
+  deleteButton: {
+    padding: spacing.sm,
+    marginLeft: spacing.sm,
+  },
+
+  recentSearchDivider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginHorizontal: spacing.md,
   },
 
   divider: {
     height: 1,
     backgroundColor: colors.border,
     marginHorizontal: spacing.md,
-  },
-
-  // Trending
-  trendingCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 10,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-
-  trendingContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-
-  trendingTextWrapper: {
-    flex: 1,
-  },
-
-  trendingTitle: {
-    fontSize: typography.fontSize.md,
-    fontWeight: '500',
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-
-  trendingCount: {
-    fontSize: typography.fontSize.xs,
-    color: colors.textMuted,
   },
 
   // Categories
