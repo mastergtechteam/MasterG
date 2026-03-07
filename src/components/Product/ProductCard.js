@@ -1,5 +1,12 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  StyleSheet,
+  Pressable,
+} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -100,18 +107,20 @@ const ProductCard = ({ item }) => {
       <View style={styles.actionButton}>
         {inCartQuantity > 0 ? (
           <View style={styles.quantityContainer}>
-            <TouchableOpacity
+            <Pressable
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               onPress={e => {
                 e.stopPropagation();
                 dispatch(decrementQuantity(item.productId));
               }}
             >
               <Text style={styles.quantityText}>−</Text>
-            </TouchableOpacity>
+            </Pressable>
 
             <Text style={styles.quantity}>{inCartQuantity}</Text>
 
-            <TouchableOpacity
+            <Pressable
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               onPress={e => {
                 e.stopPropagation();
 
@@ -124,13 +133,14 @@ const ProductCard = ({ item }) => {
               }}
             >
               <Ionicons name="add" size={16} color="#000" />
-            </TouchableOpacity>
+            </Pressable>
           </View>
         ) : (
           <TouchableOpacity
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             style={styles.addButton}
             onPress={e => {
-              e.stopPropagation();
+              e?.stopPropagation?.();
               dispatch(addToCart(mapProductToCartItem(item)));
             }}
           >
@@ -228,7 +238,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
     padding: 1,
-    height: 32,
+    height: 33,
   },
   onlyLabel: {
     color: '#777',

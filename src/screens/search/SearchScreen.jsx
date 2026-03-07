@@ -128,6 +128,10 @@ const SearchScreen = ({ navigation }) => {
 
   const handleClearSearch = () => {
     setSearchQuery('');
+    // reset search state so that stale results aren't shown
+    setSearchResults([]);
+    setHasSearched(false);
+    setSearchError(null);
   };
 
   const handleSearchSubmit = async query => {
@@ -171,6 +175,16 @@ const SearchScreen = ({ navigation }) => {
     setSearchQuery(searchTerm);
     handleSearchSubmit(searchTerm);
   };
+
+  // if user clears the query manually (or via clear button) we should
+  // reset the results & state so the UI returns to initial view
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setSearchResults([]);
+      setHasSearched(false);
+      setSearchError(null);
+    }
+  }, [searchQuery]);
 
   const renderRecentSearch = ({ item }) => (
     <TouchableOpacity
@@ -254,6 +268,7 @@ const SearchScreen = ({ navigation }) => {
         {/* Main Content */}
         {!hasSearched ? (
           <FlatList
+            key="initial-list"
             data={[]}
             keyExtractor={() => 'key'}
             showsVerticalScrollIndicator={false}
@@ -316,6 +331,7 @@ const SearchScreen = ({ navigation }) => {
           </View>
         ) : searchResults.length > 0 ? (
           <FlatList
+            key="results-list"
             data={searchResults}
             renderItem={({ item }) => <ProductCard item={item} />}
             keyExtractor={item => item.productId}
