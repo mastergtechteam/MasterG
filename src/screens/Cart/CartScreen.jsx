@@ -43,7 +43,7 @@ const CartScreen = () => {
     placingOrder,
   } = useCartScreen();
 
-  console.log(cartItems, 11);
+  // console.log(cartItems, 11);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -70,14 +70,14 @@ const CartScreen = () => {
             toggleSection={toggleSection}
           />
 
-          <SummarySection
+          {/* <SummarySection
             total={total}
             SHIPPING_CHARGE={SHIPPING_CHARGE}
             taxAmount={taxAmount}
             finalTotal={finalTotal}
             expandedSections={expandedSections}
             toggleSection={toggleSection}
-          />
+          /> */}
 
           <PlaceOrderButton
             finalTotal={finalTotal}

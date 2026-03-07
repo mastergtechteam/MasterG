@@ -22,7 +22,17 @@ const SplashScreen = () => {
   const logo = require('../../assets/images/light-logo.png');
 
   useEffect(() => {
-    initializeApp();
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 1200,
+      useNativeDriver: true,
+    }).start();
+
+    const timer = setTimeout(() => {
+      initializeApp();
+    }, 3000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   const initializeApp = async () => {
