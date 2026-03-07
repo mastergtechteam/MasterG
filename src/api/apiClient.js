@@ -1,3 +1,6 @@
+import * as Sentry from '@sentry/react-native';
+import { getCurrentScreen } from '../navigation/navigationRef';
+
 export const BASE_URL = 'https://uqlzs7e7wj.execute-api.ap-south-1.amazonaws.com';
 const TAG = '[API]';
 
@@ -12,18 +15,53 @@ export const apiGet = async (endpoint, params = {}) => {
 
   try {
     const response = await fetch(url);
-    console.log(TAG, `GET ${endpoint} — ${Date.now() - start}ms | status: ${response.status}`);
+    const duration = Date.now() - start;
+    console.log(TAG, `GET ${endpoint} — ${duration}ms | status: ${response.status}`);
 
     if (!response.ok) {
       console.warn(TAG, `❌ GET ${endpoint} failed — status: ${response.status}`);
-      throw new Error('API request failed');
+      const error = new Error(`API request failed: ${response.status}`);
+      Sentry.captureException(error, {
+        tags: {
+          error_type: 'api_error',
+          screen: getCurrentScreen(),
+        },
+        contexts: {
+          api: {
+            method: 'GET',
+            endpoint,
+            status_code: response.status,
+            duration_ms: duration,
+          },
+        },
+      });
+      throw error;
     }
 
     const data = await response.json();
     console.log(TAG, `✅ GET ${endpoint} — response:`, JSON.stringify(data, null, 2));
     return data;
   } catch (error) {
+    const duration = Date.now() - start;
     console.error(TAG, `❌ GET ${endpoint} — error: ${error.message}`);
+
+    // Only capture network/parse errors (HTTP errors already captured above)
+    if (!error.message.startsWith('API request failed')) {
+      Sentry.captureException(error, {
+        tags: {
+          error_type: 'api_error',
+          screen: getCurrentScreen(),
+        },
+        contexts: {
+          api: {
+            method: 'GET',
+            endpoint,
+            duration_ms: duration,
+          },
+        },
+      });
+    }
+
     throw error;
   }
 };
