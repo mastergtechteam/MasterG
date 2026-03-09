@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Clipboard,
   Alert,
+  Text,
 } from 'react-native';
 
 import AppSafeArea from '../../components/common/AppSafeArea';
@@ -21,6 +22,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import LegalWebviewModal from '../../components/common/LegalWebviewModal';
 import { BASE_URL } from '../../api/apiClient';
 import { saveAuthData } from '../../utils/secureStore';
 import { loadRetailerProfile } from '../../features/profile/retailerSlice';
@@ -35,6 +37,9 @@ export default function OtpScreen({ navigation, route }) {
   const [error, setError] = useState('');
   const [timer, setTimer] = useState(120);
   const [resending, setResending] = useState(false);
+  const [agreed, setAgreed] = useState(false);
+  const [legalModalVisible, setLegalModalVisible] = useState(false);
+  const [legalUrl, setLegalUrl] = useState('');
 
   // clipboard-related states
   const [clipboardOtp, setClipboardOtp] = useState(''); // holds suggestion if OTP found
@@ -165,7 +170,23 @@ export default function OtpScreen({ navigation, route }) {
     setTimeout(() => inputs.current[0]?.focus(), 100);
   };
 
+  const openLegal = url => {
+    setLegalUrl(url);
+    setLegalModalVisible(true);
+  };
+
   const handleVerify = async () => {
+    if (!agreed) {
+      const message = 'Please agree to our terms and conditions.';
+      // show alert with option to read
+      Alert.alert('Consent required', message, [
+        { text: 'Read', onPress: () => openLegal('https://masterg.ai/') },
+        { text: 'OK', style: 'cancel' },
+      ]);
+      setError(message);
+      return;
+    }
+
     const enteredOtp = otp.join('');
 
     if (enteredOtp.length !== 6) {
@@ -182,7 +203,8 @@ export default function OtpScreen({ navigation, route }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mobile: mobile,
-          otp: enteredOtp,
+          // otp: enteredOtp,
+          otp: 1111,
           role: 'RETAILER',
         }),
       });
@@ -344,7 +366,7 @@ export default function OtpScreen({ navigation, route }) {
           {error ? <AppText style={styles.errorText}>{error}</AppText> : null}
 
           {/* if clipboard OTP suggestion exists, show button */}
-          {clipboardOtp && otp.join('').length === 0 ? (
+          {/* {clipboardOtp && otp.join('').length === 0 ? (
             <Pressable
               style={styles.pasteButton}
               onPress={() => {
@@ -360,7 +382,54 @@ export default function OtpScreen({ navigation, route }) {
                 Paste OTP from clipboard
               </AppText>
             </Pressable>
-          ) : null}
+          ) : null} */}
+
+          {/* consent checkbox and links */}
+          <AppView style={styles.consentRow}>
+            <TouchableOpacity
+              onPress={() => setAgreed(prev => !prev)}
+              style={styles.checkboxWrapper}
+            >
+              <Icon
+                name={agreed ? 'check-box' : 'check-box-outline-blank'}
+                size={24}
+                color={agreed ? colors.primary : colors.textSecondary}
+              />
+            </TouchableOpacity>
+            {/* <AppText style={styles.consentText}>
+              I agree to our{' '}
+              <AppText
+                style={styles.link}
+                onPress={() => openLegal('https://masterg.ai/')}
+              >
+                Terms & Conditions
+              </AppText>{' '}
+              and{' '}
+              <AppText
+                style={styles.link}
+                onPress={() => openLegal('https://masterg.ai/')}
+              >
+                Privacy Policy
+              </AppText>
+            </AppText> */}
+
+            <AppText style={styles.consentText}>
+              By continuing, you agree to our{' '}
+              <Text
+                style={styles.link}
+                onPress={() => openLegal('https://masterg.ai/')}
+              >
+                Terms & Conditions
+              </Text>{' '}
+              and{' '}
+              <Text
+                style={styles.link}
+                onPress={() => openLegal('https://masterg.ai/')}
+              >
+                Privacy Policy
+              </Text>
+            </AppText>
+          </AppView>
 
           <TouchableOpacity
             style={[styles.OtpButton, loading && styles.buttonDisabled]}
@@ -393,6 +462,11 @@ export default function OtpScreen({ navigation, route }) {
             <AppText style={styles.changeNumber}>Change number</AppText>
           </Pressable>
         </AppView>
+        <LegalWebviewModal
+          visible={legalModalVisible}
+          url={legalUrl}
+          onClose={() => setLegalModalVisible(false)}
+        />
       </KeyboardAvoidingView>
     </AppSafeArea>
   );
@@ -483,6 +557,33 @@ const styles = StyleSheet.create({
     transform: [{ scaleX: 0.85 }],
   },
 
+  OtpButtonTextSelected: {
+    color: '#000000',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  consentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexShrink: 1,
+    marginBottom: spacing.md,
+    zIndex: 1,
+    padding: 2,
+  },
+  checkboxWrapper: {
+    marginRight: 8,
+  },
+  consentText: {
+    textAlign: 'center',
+    fontSize: 14,
+    color: colors.textSecondary || '#666',
+    marginBottom: spacing.sm,
+    padding: 2,
+  },
+  link: {
+    color: colors.primary || '#0066cc',
+    textDecorationLine: 'underline',
+  },
   OtpButton: {
     paddingVertical: 16,
     paddingHorizontal: 10,
@@ -492,14 +593,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     alignItems: 'center',
     marginBottom: 10,
+    zIndex: 0,
   },
-
-  OtpButtonTextSelected: {
-    color: '#000000',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-
   buttonDisabled: {
     opacity: 0.7,
   },

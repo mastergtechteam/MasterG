@@ -12,6 +12,7 @@ import {
   Text,
   ActivityIndicator,
 } from 'react-native';
+import LegalWebviewModal from '../../components/common/LegalWebviewModal';
 
 import AppSafeArea from '../../components/common/AppSafeArea';
 import AppText from '../../components/common/AppText';
@@ -27,7 +28,14 @@ import { BASE_URL } from '../../api/apiClient';
 export default function LoginScreen({ navigation }) {
   const [mobile, setMobile] = useState('');
   const [loading, setLoading] = useState(false);
+  const [legalModalVisible, setLegalModalVisible] = useState(false);
+  const [legalUrl, setLegalUrl] = useState('');
   const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  const openLegal = url => {
+    setLegalUrl(url);
+    setLegalModalVisible(true);
+  };
 
   const logo = require('../../assets/images/light-logo.png');
 
@@ -63,7 +71,7 @@ export default function LoginScreen({ navigation }) {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to send OTP');
+        throw new Error('Failed to send OTP , Please try again later');
       }
 
       // Navigate to OTP screen
@@ -151,6 +159,23 @@ export default function LoginScreen({ navigation }) {
             )}
           </TouchableOpacity>
 
+          <AppText style={styles.consentText}>
+            By continuing, you agree to our{' '}
+            <Text
+              style={styles.link}
+              onPress={() => openLegal('https://masterg.ai/')}
+            >
+              Terms & Conditions
+            </Text>{' '}
+            and{' '}
+            <Text
+              style={styles.link}
+              onPress={() => openLegal('https://masterg.ai/')}
+            >
+              Privacy Policy
+            </Text>
+          </AppText>
+
           {/* <TouchableOpacity
             style={styles.languageButton}
             onPress={() => navigation.navigate('App')}
@@ -158,6 +183,11 @@ export default function LoginScreen({ navigation }) {
             <Text style={styles.languageButtonText}>Skip</Text>
           </TouchableOpacity> */}
         </AppView>
+        <LegalWebviewModal
+          visible={legalModalVisible}
+          url={legalUrl}
+          onClose={() => setLegalModalVisible(false)}
+        />
       </KeyboardAvoidingView>
     </AppSafeArea>
   );
@@ -261,5 +291,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  consentText: {
+    textAlign: 'center',
+    fontSize: 14,
+    color: colors.textSecondary || '#666',
+    marginBottom: spacing.sm,
+    padding: 4,
+  },
+  link: {
+    color: colors.primary || '#0066cc',
+    textDecorationLine: 'underline',
   },
 });
