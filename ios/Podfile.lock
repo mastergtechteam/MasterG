@@ -3403,10 +3403,10 @@ SPEC REPOS:
     - FirebaseSessions
     - GoogleDataTransport
     - GoogleUtilities
-    - Sentry
     - nanopb
     - PromisesObjC
     - PromisesSwift
+    - Sentry
     - SocketRocket
 
 EXTERNAL SOURCES:
