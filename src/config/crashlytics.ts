@@ -5,28 +5,41 @@ import {
   setAttributes,
   log,
   recordError as firebaseRecordError,
-  crash,
 } from '@react-native-firebase/crashlytics';
 
-const instance = getCrashlytics();
-
 export function initCrashlytics() {
-  setCrashlyticsCollectionEnabled(instance, true);
+  try {
+    setCrashlyticsCollectionEnabled(getCrashlytics(), true);
+  } catch (e) {
+    console.warn('[Crashlytics] initCrashlytics failed:', e);
+  }
 }
 
 export async function setCrashlyticsUser(retailerId: string, appVersion: string) {
-  await setUserId(instance, String(retailerId));
-  await setAttributes(instance, { vendor_id: String(retailerId), app_version: appVersion });
+  try {
+    await setUserId(getCrashlytics(), String(retailerId));
+    await setAttributes(getCrashlytics(), { vendor_id: String(retailerId), app_version: appVersion });
+  } catch (e) {
+    console.warn('[Crashlytics] setCrashlyticsUser failed:', e);
+  }
 }
 
 export async function clearCrashlyticsUser() {
-  await setUserId(instance, '');
-  await setAttributes(instance, { vendor_id: '', app_version: '' });
+  try {
+    await setUserId(getCrashlytics(), '');
+    await setAttributes(getCrashlytics(), { vendor_id: '', app_version: '' });
+  } catch (e) {
+    console.warn('[Crashlytics] clearCrashlyticsUser failed:', e);
+  }
 }
 
 export function recordError(error: Error, context?: Record<string, string>) {
-  if (context) {
-    log(instance, JSON.stringify(context));
+  try {
+    if (context) {
+      log(getCrashlytics(), JSON.stringify(context));
+    }
+    firebaseRecordError(getCrashlytics(), error);
+  } catch (e) {
+    console.warn('[Crashlytics] recordError failed:', e);
   }
-  firebaseRecordError(instance, error);
 }
