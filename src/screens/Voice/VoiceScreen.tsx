@@ -99,7 +99,7 @@ function VoiceScreen() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+      <StatusBar barStyle="light-content" backgroundColor="#000000" />
       <AppContent />
       <CartBottomTab />
     </SafeAreaProvider>

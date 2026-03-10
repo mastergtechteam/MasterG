@@ -20,6 +20,7 @@
 // }
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../../theme/colors';
+import { StatusBar } from 'react-native';
 
 export default function AppSafeArea({ children, style }) {
   return (
@@ -32,6 +33,7 @@ export default function AppSafeArea({ children, style }) {
         style,
       ]}
     >
+      <StatusBar barStyle="light-content" backgroundColor="#000000" />
       {children}
     </SafeAreaView>
   );

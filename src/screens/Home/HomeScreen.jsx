@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, FlatList } from 'react-native';
+import { View, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import AppSafeArea from '../../components/common/AppSafeArea';
 import BannerCarousel from '../../components/Home/BannerCrousel';
 import Header from '../../components/common/Header';
@@ -9,33 +9,43 @@ import CategoriesSection from '../../components/Home/CategoriesSection';
 import CartBottomTab from '../../components/common/cartBottomTab';
 import { useNavigation } from '@react-navigation/native';
 import { useHomeData } from '../../hooks/useHomeData';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import SearchBar from '../../components/common/SearchBar';
 import ProductCard from '../../components/Product/ProductCard';
 import { BASE_URL } from '../../api/apiClient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAuthData } from '../../utils/secureStore';
 import { loadRetailerProfile } from '../../features/profile/retailerSlice';
+import { getAppType } from '../../config/appConfig';
+import AppText from '../../components/common/AppText';
 
 const HomeScreen = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
-  const dispatch = useDispatch();
+  const [hasSearched, setHasSearched] = useState(false);
 
   const navigation = useNavigation();
-
-  // useEffect(() => {
-  //   getAllStorageData();
-  //   dispatch(loadRetailerProfile());
-  // }, []);
   const { banners, deals, categories, loading, error, refetch } = useHomeData();
-
+  const isSearching = hasSearched;
   const handleSearch = async query => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      setHasSearched(false);
+      return;
+    }
+
     try {
       setSearchLoading(true);
+      setHasSearched(true);
 
       const url = `${BASE_URL}/search?q=${query}`;
-      const response = await fetch(url);
+      const appType = getAppType();
+      const response = await fetch(url, {
+        headers: {
+          'X-App-Type': appType,
+        },
+      });
+
       const json = await response.json();
 
       if (json.success) {
@@ -50,39 +60,7 @@ const HomeScreen = () => {
       setSearchLoading(false);
     }
   };
-
-  // const getAllStorageData = async () => {
-  //   try {
-  //     // 1️⃣ Get AsyncStorage data
-  //     const keys = await AsyncStorage.getAllKeys();
-  //     const stores = await AsyncStorage.multiGet(keys);
-
-  //     const asyncData = {};
-  //     stores.forEach(([key, value]) => {
-  //       try {
-  //         asyncData[key] = JSON.parse(value);
-  //       } catch {
-  //         asyncData[key] = value;
-  //       }
-  //     });
-
-  //     // 2️⃣ Get Secure data (token + retailerId)
-  //     const secureData = await getAuthData();
-
-  //     const result = {
-  //       ...asyncData,
-  //       secure: secureData, // { token, retailerId }
-  //     };
-
-  //     console.log('All App Storage Data:', result);
-
-  //     return result;
-  //   } catch (error) {
-  //     console.log('Error fetching storage data:', error);
-  //   }
-  // };
   const profile = useSelector(state => state.retailer.profile);
-  console.log('Redux Profile:', profile);
 
   return (
     <AppSafeArea>
@@ -99,7 +77,19 @@ const HomeScreen = () => {
               {/* 🔍 SEARCH BAR */}
               <SearchBar onSearch={handleSearch} loading={searchLoading} />
 
-              {/* 🔎 SEARCH RESULTS */}
+              {searchLoading && (
+                <View style={styles.searchMessageContainer}>
+                  <ActivityIndicator size="small" color="#fff" />
+                  <AppText style={styles.searchText}>Searching...</AppText>
+                </View>
+              )}
+
+              {!searchLoading && hasSearched && searchResults.length === 0 && (
+                <View style={styles.searchMessageContainer}>
+                  <AppText>Product not available</AppText>
+                </View>
+              )}
+
               {searchResults.length > 0 && (
                 <View style={{ paddingHorizontal: 16 }}>
                   <FlatList
@@ -128,50 +118,47 @@ const HomeScreen = () => {
               )}
 
               {/* 🏠 NORMAL HOMEPAGE CONTENT */}
-              <BannerCarousel
-                data={banners}
-                loading={loading}
-                error={error}
-                onRetry={refetch}
-              />
+              {!isSearching && (
+                <>
+                  <BannerCarousel
+                    data={banners}
+                    loading={loading}
+                    error={error}
+                    onRetry={refetch}
+                  />
 
-              <CategoriesSection
-                data={categories}
-                loading={loading}
-                error={error}
-                onRetry={refetch}
-              />
+                  <CategoriesSection
+                    data={categories}
+                    loading={loading}
+                    error={error}
+                    onRetry={refetch}
+                  />
 
-              <DealsList
-                data={deals}
-                loading={loading}
-                error={error}
-                onRetry={refetch}
-              />
+                  <DealsList
+                    data={deals}
+                    loading={loading}
+                    error={error}
+                    onRetry={refetch}
+                  />
 
-              <View
-                style={{
-                  flexDirection: 'row',
-                  gap: 12,
-                  paddingHorizontal: 16,
-                  marginBottom: 60,
-                }}
-              >
-                <ActionCard
-                  icon="mic"
-                  title="Speak & Order"
-                  subtitle="Order in seconds using voice"
-                  onPress={() => navigation.navigate('Mic')}
-                />
+                  <View style={styles.actionContainer}>
+                    <ActionCard
+                      icon="mic"
+                      title="Speak & Order"
+                      subtitle="Order in seconds using voice"
+                      onPress={() => navigation.navigate('Mic')}
+                    />
 
-                <ActionCard
-                  icon="cart"
-                  title="Quick Buy"
-                  subtitle="Buy frequently ordered items"
-                  iconBgColor="#143620"
-                  onPress={() => navigation.navigate('Orders')}
-                />
-              </View>
+                    <ActionCard
+                      icon="cart"
+                      title="Quick Buy"
+                      subtitle="Buy frequently ordered items"
+                      iconBgColor="#143620"
+                      onPress={() => navigation.navigate('Orders')}
+                    />
+                  </View>
+                </>
+              )}
             </>
           }
         />
@@ -182,3 +169,21 @@ const HomeScreen = () => {
 };
 
 export default HomeScreen;
+
+const styles = StyleSheet.create({
+  searchMessageContainer: {
+    alignItems: 'center',
+    padding: 20,
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  actionContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingHorizontal: 16,
+    marginBottom: 80,
+  },
+  searchText: {
+    marginLeft: 10,
+  },
+});

@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import Entypo from 'react-native-vector-icons/Entypo';
 
 import AppSafeArea from '../../components/common/AppSafeArea';
@@ -29,7 +29,6 @@ import {
   clearRetailerProfile,
 } from '../../features/profile/retailerSlice';
 
-import * as Keychain from 'react-native-keychain';
 import { clearAuthData } from '../../utils/secureStore';
 import { Platform, ToastAndroid } from 'react-native';
 
@@ -37,7 +36,6 @@ const ProfileScreen = () => {
   const retailer = useSelector(state => state.retailer.profile);
   const loading = useSelector(state => state.retailer.loading);
   const dispatch = useDispatch();
-  const reduxProfile = useSelector(state => state.retailer.profile);
   const [expandedSections, setExpandedSections] = useState({
     shop: false,
     address: false,
@@ -45,12 +43,6 @@ const ProfileScreen = () => {
     shopImage: false,
   });
   const navigation = useNavigation();
-
-  const isProfileIncomplete = retailerData => {
-    if (!retailerData) return true;
-
-    return !retailerData.storeName || !retailerData.address;
-  };
 
   const toggleSection = section => {
     setExpandedSections(prev => ({
@@ -106,6 +98,9 @@ const ProfileScreen = () => {
     // Navigate directly to Settings screen
     navigation.navigate('Settings');
   };
+  const handleEditProfile = () => {
+    navigation.navigate('EditProfile');
+  };
 
   const handlePanGst = () => {
     Alert.alert(
@@ -113,12 +108,6 @@ const ProfileScreen = () => {
       'You have not added PAN or GST details yet.',
       [{ text: 'OK' }],
     );
-  };
-
-  const getFullAddress = () => {
-    const addr = retailer?.address;
-    if (!addr) return '';
-    return `${addr.line1}, ${addr.line2}, ${addr.area}, ${addr.city}, ${addr.state} ${addr.pincode}`;
   };
 
   const ExpandableSection = ({ title, icon, section, children }) => {
@@ -322,6 +311,15 @@ const ProfileScreen = () => {
                       </AppText>
                     </AppView>
                   )}
+
+                  <TouchableOpacity
+                    style={[styles.editButton, styles.editBtn]}
+                    onPress={handleEditProfile}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="add" size={18} color={colors.primary} />
+                    <AppText style={styles.editBtnText}>Edit Profile</AppText>
+                  </TouchableOpacity>
                 </AppView>
               </AppView>
 
@@ -648,7 +646,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   storeName: {
-    fontSize: 13,
+    fontSize: 16,
     color: colors.textSecondary,
     marginBottom: spacing.sm,
   },
@@ -886,5 +884,25 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 12,
     resizeMode: 'cover',
+  },
+  editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: spacing.sm,
+    flex: 1,
+    marginTop: 10,
+  },
+  editBtn: {
+    backgroundColor: colors.primary + '15',
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  editBtnText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.primary,
   },
 });

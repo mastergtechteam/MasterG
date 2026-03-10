@@ -37,9 +37,9 @@ export const useCartScreen = () => {
     useState(false);
 
   const [expandedSections, setExpandedSections] = useState({
-    billing: false,
+    billing: true,
     summary: false,
-    delivery: false,
+    delivery: true,
   });
 
   const toggleSection = section => {

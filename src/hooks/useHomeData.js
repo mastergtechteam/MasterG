@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BASE_URL } from '../api/apiClient';
 import { getAuthData } from '../utils/secureStore';
+import { getAppType } from '../config/appConfig';
 
 export const useHomeData = () => {
   const [banners, setBanners] = useState([]);
@@ -21,8 +22,12 @@ export const useHomeData = () => {
 
       const authData = await getAuthData();
       const token = authData?.token;
+      const appType = getAppType();
 
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const headers = {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        'X-App-Type': appType,
+      };
 
       const [dealsRes, categoriesRes] = await Promise.all([
         fetch(`${BASE_URL}/deals`, { headers }),

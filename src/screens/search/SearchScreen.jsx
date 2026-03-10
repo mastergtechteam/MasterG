@@ -22,6 +22,7 @@ import { BASE_URL } from '../../api/apiClient';
 import { useHomeData } from '../../hooks/useHomeData';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CartBottomTab from '../../components/common/cartBottomTab';
+import { getAppType } from '../../config/appConfig';
 
 const RECENT_SEARCHES_KEY = '@app_recent_searches';
 const MAX_RECENT_SEARCHES = 10;
@@ -138,6 +139,8 @@ const SearchScreen = ({ navigation }) => {
     if (!query.trim()) return;
     const TAG = '[API:Search]';
     const url = `${BASE_URL}/search?q=${query}`;
+    const appType = getAppType();
+
     console.log(TAG, `▶ GET ${url}`);
     const start = Date.now();
     try {
@@ -145,7 +148,12 @@ const SearchScreen = ({ navigation }) => {
       setSearchError(null);
       setHasSearched(true);
 
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        headers: {
+          'X-App-Type': appType,
+        },
+      });
+
       console.log(
         TAG,
         `⏱ ${Date.now() - start}ms | status: ${response.status}`,

@@ -5,6 +5,7 @@ import LanguageSelectionScreen from '../screens/language/LanguageSelectionScreen
 import AuthNavigator from './AuthNavigator';
 import AppNavigator from './AppNavigator';
 import GetUserLocationScreen from '../screens/GetUserLocation/GetUserLocationScreen';
+import ConsentScreen from '../screens/auth/ConsentScreen';
 const Stack = createNativeStackNavigator();
 
 export default function RootNavigator() {
@@ -17,6 +18,7 @@ export default function RootNavigator() {
       />
       <Stack.Screen name="Auth" component={AuthNavigator} />
       <Stack.Screen name="GetLocation" component={GetUserLocationScreen} />
+      <Stack.Screen name="GetConsent" component={ConsentScreen} />
       <Stack.Screen name="App" component={AppNavigator} />
     </Stack.Navigator>
   );

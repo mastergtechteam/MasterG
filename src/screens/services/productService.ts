@@ -2,6 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import logger from '../../utils/logger';
 import { CONSTANTS } from '../../utils/constants';
+import { getAppType } from '../../config/appConfig';
+
 
 const TAG = 'PRODUCT_SERVICE';
 
@@ -51,8 +53,11 @@ class ProductService {
   async fetchProductsViaAPI(): Promise<Product[]> {
     try {
       const response = await axios.get<ProductsResponse>(CONSTANTS.PRODUCTS_API, {
-        timeout: 10000,
-      });
+  timeout: 10000,
+  headers: {
+    'X-App-Type': getAppType(),
+  },
+});
 
       if (response.data.success && response.data.data) {
         const products = response.data.data;

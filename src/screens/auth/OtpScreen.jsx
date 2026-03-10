@@ -226,7 +226,6 @@ export default function OtpScreen({ navigation, route }) {
 
       // Load latest profile from backend
       const profile = await dispatch(loadRetailerProfile()).unwrap();
-      console.log(profile, 11, profile?.address.pincode);
 
       // Store non-sensitive data
       await AsyncStorage.setItem('user_mobile', data.user.mobile);
@@ -234,7 +233,7 @@ export default function OtpScreen({ navigation, route }) {
       await AsyncStorage.setItem(
         'retailer_data',
         JSON.stringify({
-          pincode: profile?.address.pincode,
+          pincode: profile?.address?.pincode || null,
         }),
       );
 

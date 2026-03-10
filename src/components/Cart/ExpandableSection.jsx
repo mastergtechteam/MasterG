@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import styles from '../../screens/Cart/styles';
+import { colors } from '../../theme/colors';
 
 const ExpandableSection = ({
   title,
@@ -27,6 +28,7 @@ const ExpandableSection = ({
         <MaterialIcons
           name={isExpanded ? 'expand-less' : 'expand-more'}
           size={24}
+          color={colors.white}
         />
       </TouchableOpacity>
 
