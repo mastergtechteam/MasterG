@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { BASE_URL } from '../../../api/apiClient';
+import { getAppType } from '../../../config/appConfig';
 
 const MAX_LIMIT_PER_ITEM = 10;
 
@@ -23,6 +24,7 @@ export const processReorder = async orderItems => {
       {
         headers: {
           'Content-Type': 'application/json',
+          'X-App-Type': getAppType(),
         },
       },
     );

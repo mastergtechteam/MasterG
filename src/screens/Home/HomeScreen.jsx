@@ -13,16 +13,15 @@ import { useSelector } from 'react-redux';
 import SearchBar from '../../components/common/SearchBar';
 import ProductCard from '../../components/Product/ProductCard';
 import { BASE_URL } from '../../api/apiClient';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getAuthData } from '../../utils/secureStore';
-import { loadRetailerProfile } from '../../features/profile/retailerSlice';
 import { getAppType } from '../../config/appConfig';
 import AppText from '../../components/common/AppText';
+import PanCornerBanner from '../../components/common/PanCornerBanner';
 
 const HomeScreen = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [showRestrictedBanner, setShowRestrictedBanner] = useState(false);
 
   const navigation = useNavigation();
   const { banners, deals, categories, loading, error, refetch } = useHomeData();
@@ -31,6 +30,7 @@ const HomeScreen = () => {
     if (!query.trim()) {
       setSearchResults([]);
       setHasSearched(false);
+      setShowRestrictedBanner(false);
       return;
     }
 
@@ -47,6 +47,14 @@ const HomeScreen = () => {
       });
 
       const json = await response.json();
+
+      if (json?.restricted) {
+        setShowRestrictedBanner(true);
+        setSearchResults([]);
+        return;
+      }
+
+      setShowRestrictedBanner(false);
 
       if (json.success) {
         setSearchResults(json.data || []);
@@ -76,6 +84,8 @@ const HomeScreen = () => {
 
               {/* 🔍 SEARCH BAR */}
               <SearchBar onSearch={handleSearch} loading={searchLoading} />
+
+              {showRestrictedBanner && <PanCornerBanner />}
 
               {searchLoading && (
                 <View style={styles.searchMessageContainer}>

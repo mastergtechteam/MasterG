@@ -23,6 +23,7 @@ import { useHomeData } from '../../hooks/useHomeData';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CartBottomTab from '../../components/common/cartBottomTab';
 import { getAppType } from '../../config/appConfig';
+import PanCornerBanner from '../../components/common/PanCornerBanner';
 
 const RECENT_SEARCHES_KEY = '@app_recent_searches';
 const MAX_RECENT_SEARCHES = 10;
@@ -36,6 +37,7 @@ const SearchScreen = ({ navigation }) => {
   const [hasSearched, setHasSearched] = useState(false);
   const [recentSearches, setRecentSearches] = useState([]);
   const [loadingRecents, setLoadingRecents] = useState(true);
+  const [showRestrictedBanner, setShowRestrictedBanner] = useState(false);
 
   const cartItems = useSelector(selectCartItemsArray);
   const { banners, deals, categories, error, refetch } = useHomeData();
@@ -133,6 +135,7 @@ const SearchScreen = ({ navigation }) => {
     setSearchResults([]);
     setHasSearched(false);
     setSearchError(null);
+    setShowRestrictedBanner(false);
   };
 
   const handleSearchSubmit = async query => {
@@ -141,7 +144,6 @@ const SearchScreen = ({ navigation }) => {
     const url = `${BASE_URL}/search?q=${query}`;
     const appType = getAppType();
 
-    console.log(TAG, `▶ GET ${url}`);
     const start = Date.now();
     try {
       setLoading(true);
@@ -154,17 +156,19 @@ const SearchScreen = ({ navigation }) => {
         },
       });
 
-      console.log(
-        TAG,
-        `⏱ ${Date.now() - start}ms | status: ${response.status}`,
-      );
-
       if (!response.ok) {
         throw new Error(`Server error: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log(TAG, `✅ ${data?.data?.length ?? 0} results for "${query}"`);
+
+      if (data?.restricted) {
+        setShowRestrictedBanner(true);
+        setSearchResults([]);
+        return;
+      }
+
+      setShowRestrictedBanner(false);
 
       setSearchResults(data?.data || []);
 
@@ -191,6 +195,7 @@ const SearchScreen = ({ navigation }) => {
       setSearchResults([]);
       setHasSearched(false);
       setSearchError(null);
+      setShowRestrictedBanner(false);
     }
   }, [searchQuery]);
 
@@ -337,6 +342,15 @@ const SearchScreen = ({ navigation }) => {
               <AppText style={styles.retryButtonText}>Try Again</AppText>
             </TouchableOpacity>
           </View>
+        ) : showRestrictedBanner ? (
+          // <View style={styles.bannerContainer}>
+          //   <Image
+          //     source={tobaccoBanner}
+          //     style={styles.bannerImage}
+          //     resizeMode="cover"
+          //   />
+          // </View>
+          <PanCornerBanner />
         ) : searchResults.length > 0 ? (
           <FlatList
             key="results-list"
@@ -644,5 +658,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#000',
+  },
+  bannerContainer: {
+    paddingHorizontal: spacing.lg,
+    marginTop: spacing.lg,
+  },
+
+  bannerImage: {
+    width: '100%',
+    height: 160,
+    borderRadius: 12,
   },
 });

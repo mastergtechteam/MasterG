@@ -11,6 +11,15 @@ const BillingSection = ({
   expandedSections,
   toggleSection,
 }) => {
+  const isAddressEmpty =
+    !billingAddress ||
+    (!billingAddress.line1 &&
+      !billingAddress.line2 &&
+      !billingAddress.area &&
+      !billingAddress.city &&
+      !billingAddress.state &&
+      !billingAddress.pincode);
+
   return (
     <ExpandableSection
       title="Billing Address"
@@ -26,7 +35,7 @@ const BillingSection = ({
       }
     >
       <View style={styles.billingDetails}>
-        {billingAddress ? (
+        {!isAddressEmpty ? (
           <>
             {ShopName ? (
               <Text style={styles.billingAddress}>{ShopName}</Text>
@@ -46,7 +55,7 @@ const BillingSection = ({
           </>
         ) : (
           <Text style={styles.billingText}>
-            No address saved. Please auto-fetch location first.
+            Please complete your profile or add an address.
           </Text>
         )}
       </View>

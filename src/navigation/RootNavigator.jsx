@@ -6,12 +6,14 @@ import AuthNavigator from './AuthNavigator';
 import AppNavigator from './AppNavigator';
 import GetUserLocationScreen from '../screens/GetUserLocation/GetUserLocationScreen';
 import ConsentScreen from '../screens/auth/ConsentScreen';
+import ForceUpdateScreen from '../screens/ForceUpdate/ForceUpdateScreen';
 const Stack = createNativeStackNavigator();
 
 export default function RootNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Splash" component={SplashScreen} />
+      <Stack.Screen name="ForceUpdate" component={ForceUpdateScreen} />
       <Stack.Screen
         name="LanguageSelection"
         component={LanguageSelectionScreen}

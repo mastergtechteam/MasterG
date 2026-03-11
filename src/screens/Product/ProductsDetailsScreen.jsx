@@ -28,6 +28,7 @@ import GoBackHeader from '../../components/common/GoBackHeader';
 import AppSafeArea from '../../components/common/AppSafeArea';
 import { BASE_URL } from '../../api/apiClient';
 import { ToastAndroid, Platform, Alert } from 'react-native';
+import { getAppType } from '../../config/appConfig';
 
 const { width: screenWidth } = Dimensions.get('window');
 const IMAGE_WIDTH = screenWidth;
@@ -38,8 +39,6 @@ const ProductsDetailsScreen = () => {
   const route = useRoute();
   const dispatch = useDispatch();
   const { productId } = route.params || {};
-  console.log(productId);
-
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -64,18 +63,17 @@ const ProductsDetailsScreen = () => {
     const fetchProduct = async () => {
       const TAG = '[API:ProductDetails]';
       const url = `${BASE_URL}/products/${productId}`;
-      console.log(TAG, `▶ GET ${url}`);
       const start = Date.now();
       try {
-        const response = await fetch(url);
-        console.log(
-          TAG,
-          `⏱ ${Date.now() - start}ms | status: ${response.status}`,
-        );
+        const response = await fetch(url, {
+          headers: {
+            'X-App-Type': getAppType(),
+          },
+        });
+
         const json = await response.json();
 
         if (json.success) {
-          console.log(TAG, `✅ Product loaded: ${json.data?.name}`);
           setProduct(json.data);
         } else {
           console.warn(TAG, `⚠️ Product not found for id: ${productId}`);

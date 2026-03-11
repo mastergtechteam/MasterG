@@ -401,6 +401,7 @@ const AddRetailerScreen = () => {
             keyboardType="phone-pad"
             value={formData.mobile}
             onChangeText={v => setFormData({ ...formData, mobile: v })}
+            editable={false}
           />
 
           <RetailerInput

@@ -22,7 +22,6 @@ export async function requestNotificationPermission(): Promise<boolean> {
 export async function getFCMToken(): Promise<string | null> {
   try {
     const token = await messaging().getToken();
-    console.log('[FCM] Token:', token);
     return token;
   } catch (e) {
     console.warn('[FCM] Failed to get token:', e);

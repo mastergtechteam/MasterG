@@ -17,6 +17,7 @@ import {
 
 import { BASE_URL } from '../../api/apiClient';
 import { getAuthData } from '../../utils/secureStore';
+import { getAppType } from '../../config/appConfig';
 
 export const useCartScreen = () => {
   const dispatch = useDispatch();
@@ -127,8 +128,6 @@ export const useCartScreen = () => {
     };
 
     const TAG = '[API:Order]';
-    console.log(TAG, '▶ Placing order...');
-    console.log(TAG, '📦 Payload:', JSON.stringify(orderPayload, null, 2));
 
     const start = Date.now();
 
@@ -142,19 +141,16 @@ export const useCartScreen = () => {
         navigation.replace('Auth');
         return;
       }
-      console.log('payload', orderPayload);
 
       const response = await fetch(`${BASE_URL}/api/v1/order`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${authData.token}`,
+          'X-App-Type': getAppType(),
         },
         body: JSON.stringify(orderPayload),
       });
-
-      console.log(TAG, `⏱ Response received — ${Date.now() - start}ms`);
-      console.log(TAG, `📡 Status: ${response.status}`);
 
       const text = await response.text();
       let data;
@@ -164,8 +160,6 @@ export const useCartScreen = () => {
       } catch (e) {
         data = {};
       }
-
-      console.log(TAG, '📩 Response body:', JSON.stringify(data, null, 2));
 
       if (response.status >= 200 && response.status < 300) {
         setModalVisible(false);

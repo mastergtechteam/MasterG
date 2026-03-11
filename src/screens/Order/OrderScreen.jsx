@@ -17,8 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BASE_URL } from '../../api/apiClient';
 import { useNavigation } from '@react-navigation/native';
 import { getAuthData } from '../../utils/secureStore';
-
-// const RETAILER_ID = 'RET00001';
+import { getAppType } from '../../config/appConfig';
 
 const OrdersScreen = () => {
   const [orders, setOrders] = useState([]);
@@ -39,8 +38,6 @@ const OrdersScreen = () => {
       setLoading(true);
 
       const authData = await getAuthData();
-
-      console.log('🔐 Secure Auth Data:', authData);
 
       if (!authData?.token || !authData?.retailerId) {
         setOrders([]);
@@ -66,8 +63,6 @@ const OrdersScreen = () => {
 
     const url = `${BASE_URL}/api/v1/order?retailerId=${id}`;
 
-    console.log(TAG, `▶ GET ${url}`);
-
     const start = Date.now();
 
     try {
@@ -77,10 +72,9 @@ const OrdersScreen = () => {
         headers: {
           Authorization: `Bearer ${authData?.token}`,
           'Content-Type': 'application/json',
+          'X-App-Type': getAppType(),
         },
       });
-
-      console.log(TAG, `⏱ ${Date.now() - start}ms | status: ${res.status}`);
 
       if (!res.ok) {
         throw new Error(`Server error (${res.status})`);
@@ -100,45 +94,6 @@ const OrdersScreen = () => {
       );
       setOrders([]);
     }
-  };
-
-  const fetchOrderDetails = async orderId => {
-    const TAG = '[API:OrderDetails]';
-
-    const authData = await getAuthData();
-    if (!authData?.token) return;
-
-    const url = `${BASE_URL}/api/v1/order/${orderId}`;
-
-    console.log(TAG, `▶ GET ${url}`);
-
-    const start = Date.now();
-
-    try {
-      const res = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${authData.token}`,
-        },
-      });
-
-      console.log(TAG, `⏱ ${Date.now() - start}ms | status: ${res.status}`);
-
-      const json = await res.json();
-
-      if (json.success) {
-        setOrderDetails(prev => ({ ...prev, [orderId]: json.data }));
-        toggleOrderExpand(orderId);
-      }
-    } catch (err) {
-      console.error(TAG, `❌ Details Error: ${err.message}`);
-    }
-  };
-
-  const toggleOrderExpand = orderId => {
-    setExpandedOrders(prev => ({
-      ...prev,
-      [orderId]: !prev[orderId],
-    }));
   };
 
   const onRefresh = () => {
@@ -311,70 +266,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: 'center',
   },
-
-  // Order Card
-  // orderCard: {
-  //   backgroundColor: colors.background,
-  //   borderRadius: 16,
-  //   marginBottom: 12,
-  //   overflow: 'hidden',
-  //   borderWidth: 1,
-  //   borderColor: colors.border,
-  // },
-
-  // orderHeaderContainer: {
-  //   flexDirection: 'row',
-  //   justifyContent: 'space-between',
-  //   alignItems: 'center',
-  //   paddingHorizontal: 16,
-  //   paddingVertical: 14,
-  // },
-
-  // headerLeft: {
-  //   flex: 1,
-  // },
-
-  // headerRight: {
-  //   flexDirection: 'row',
-  //   alignItems: 'center',
-  //   gap: 12,
-  // },
-
-  // orderId: {
-  //   fontSize: 16,
-  //   fontWeight: '700',
-  //   color: colors.textPrimary,
-  // },
-
-  // date: {
-  //   fontSize: 12,
-  //   color: colors.textSecondary,
-  //   marginTop: 4,
-  // },
-
-  // statusAmount: {
-  //   alignItems: 'flex-end',
-  //   gap: 8,
-  // },
-
-  // amount: {
-  //   fontSize: 16,
-  //   fontWeight: '700',
-  //   color: colors.primary,
-  // },
-
-  // statusBadge: {
-  //   backgroundColor: colors.primary + '20',
-  //   paddingHorizontal: 10,
-  //   paddingVertical: 4,
-  //   borderRadius: 8,
-  // },
-
-  // status: {
-  //   fontSize: 11,
-  //   fontWeight: '600',
-  //   color: colors.primary,
-  // },
 
   orderCard: {
     backgroundColor: '#111827',

@@ -8,9 +8,9 @@ import { FlatList } from 'react-native';
 import { colors } from '../../theme/colors';
 import GoBackHeader from '../../components/common/GoBackHeader';
 import { BASE_URL } from '../../api/apiClient';
+import { getAppType } from '../../config/appConfig';
 
-const API_URL =
-  `${BASE_URL}/categories`; // 👈 replace this
+const API_URL = `${BASE_URL}/categories`; // 👈 replace this
 
 const CategoriesScreen = () => {
   const [categories, setCategories] = useState([]);
@@ -21,11 +21,14 @@ const CategoriesScreen = () => {
 
   const fetchCategories = async () => {
     const TAG = '[API:Categories]';
-    console.log(TAG, `▶ GET ${API_URL}`);
     const start = Date.now();
     try {
-      const response = await fetch(API_URL);
-      console.log(TAG, `⏱ ${Date.now() - start}ms | status: ${response.status}`);
+      const response = await fetch(API_URL, {
+        headers: {
+          'X-App-Type': getAppType(),
+        },
+      });
+
       const json = await response.json();
 
       if (json?.success && Array.isArray(json.data)) {
@@ -36,7 +39,6 @@ const CategoriesScreen = () => {
             title: item.name,
             image: { uri: item.image },
           }));
-        console.log(TAG, `✅ ${formattedData.length} categories loaded`);
         setCategories(formattedData);
       }
     } catch (error) {

@@ -14,7 +14,7 @@ export default function StackNavigator() {
       <Stack.Screen name="HomeMain" component={HomeScreen} />
       <Stack.Screen name="Insights" component={InsightsScreen} />
       <Stack.Screen name="Order" component={OrderScreen} />
-      <Stack.Screen name="Payment" component={PaymentScreen} />
+      {/* <Stack.Screen name="Payment" component={PaymentScreen} /> */}
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="Products" component={ProductsScreen} />
       <Stack.Screen name="Voice" component={VoiceScreen} />

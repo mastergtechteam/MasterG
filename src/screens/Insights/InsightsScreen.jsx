@@ -15,6 +15,7 @@ import { BASE_URL } from '../../api/apiClient';
 import { useNavigation } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
 import { getAuthData } from '../../utils/secureStore';
+import { getAppType } from '../../config/appConfig';
 
 export default function InsightsScreen() {
   const [stats, setStats] = useState([]);
@@ -44,11 +45,13 @@ export default function InsightsScreen() {
       }
 
       const url = `${BASE_URL}/retailer/${id}/insights`;
+      const appType = getAppType();
 
       const response = await fetch(url, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
+          'X-App-Type': appType,
         },
       });
 

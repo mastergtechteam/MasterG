@@ -94,8 +94,6 @@ const ProfileScreen = () => {
   };
 
   const handleSettings = () => {
-    console.log('⚙️ SETTINGS clicked');
-    // Navigate directly to Settings screen
     navigation.navigate('Settings');
   };
   const handleEditProfile = () => {

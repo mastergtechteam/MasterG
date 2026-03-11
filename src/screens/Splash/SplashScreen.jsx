@@ -13,6 +13,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { useDispatch } from 'react-redux';
 import { loadRetailerProfile } from '../../features/profile/retailerSlice';
 import { getAuthData, clearAuthData } from '../../utils/secureStore';
+import { checkAppVersion } from '../services/versionService';
 
 const SplashScreen = () => {
   const navigation = useNavigation();
@@ -37,6 +38,15 @@ const SplashScreen = () => {
 
   const initializeApp = async () => {
     try {
+      const versionResult = await checkAppVersion();
+
+      if (versionResult.type === 'force') {
+        navigation.replace('ForceUpdate', {
+          storeUrl: versionResult.storeUrl,
+        });
+        return;
+      }
+
       const authData = await getAuthData();
 
       // 🔐 No token → go to Auth

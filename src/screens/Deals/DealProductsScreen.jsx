@@ -20,6 +20,7 @@ import { typography } from '../../theme/typography';
 import { selectCartItemsArray } from '../../features/cart/cartSelectors';
 import { BASE_URL } from '../../api/apiClient';
 import { Dimensions } from 'react-native';
+import { getAppType } from '../../config/appConfig';
 
 const { width } = Dimensions.get('window');
 const ITEM_WIDTH = (width - 48) / 2;
@@ -31,7 +32,6 @@ const DealProductsScreen = () => {
   // 👉 expect params like: { item: { title, productIds } }
   const { title, itemIds } = route.params || {};
   const productIds = itemIds;
-  console.log(productIds);
 
   const cartItems = useSelector(selectCartItemsArray);
   const cartItemCount = cartItems.length;
@@ -49,7 +49,6 @@ const DealProductsScreen = () => {
   const fetchProducts = async () => {
     const TAG = '[API:DealProducts]';
     const url = `${BASE_URL}/products/batch`;
-    console.log(TAG, `▶ POST ${url}`, { productIds });
     const start = Date.now();
     try {
       setLoading(true);
@@ -57,15 +56,16 @@ const DealProductsScreen = () => {
 
       const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-App-Type': getAppType(),
+        },
         body: JSON.stringify({ productIds }),
       });
 
-      console.log(TAG, `⏱ ${Date.now() - start}ms | status: ${response.status}`);
       const result = await response.json();
 
       if (result?.success) {
-        console.log(TAG, `✅ ${result.data?.length ?? 0} products fetched`);
         setProducts(result.data || []);
       } else {
         console.warn(TAG, `⚠️ API returned success: false`);
@@ -121,7 +121,7 @@ const DealProductsScreen = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           paddingVertical: 16,
-          paddingBottom: cartItemCount > 0 ? 90 : 16,
+          paddingBottom: cartItemCount > 0 ? 180 : 16,
         }}
       />
 

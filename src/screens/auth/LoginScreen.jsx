@@ -24,6 +24,7 @@ import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 
 import { BASE_URL } from '../../api/apiClient';
+import { getAppType } from '../../config/appConfig';
 
 export default function LoginScreen({ navigation }) {
   const [mobile, setMobile] = useState('');
@@ -62,6 +63,7 @@ export default function LoginScreen({ navigation }) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-App-Type': getAppType(),
         },
         body: JSON.stringify({
           mobile: mobile, // API expects without +91

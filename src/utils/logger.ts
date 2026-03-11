@@ -57,7 +57,6 @@ class Logger {
 
   success(tag: string, message: string, data?: any): void {
     if (this.shouldLog(LogLevel.INFO)) {
-      console.log(`✅ [${tag}] ${message}`, data || '');
     }
   }
 }

@@ -32,11 +32,9 @@ const ProductsScreen = () => {
   const dispatch = useDispatch();
   const cartItems = useSelector(selectCartItemsArray);
   const cartItemCount = cartItems.length;
-  // const filters = ['Maggi', 'Salt', 'Sugar', 'Oil'];
 
   const { item } = route.params;
   const categoryId = item.id;
-  // console.log(item);
 
   useEffect(() => {
     if (!data) {
@@ -55,8 +53,6 @@ const ProductsScreen = () => {
   const loading = useSelector(state => state.common.loading);
   const error = useSelector(state => state.common.error);
 
-  // console.log(data?.data);
-
   const products = (data?.data || []).filter(
     product => product.status === 'ACTIVE',
   );
@@ -70,9 +66,6 @@ const ProductsScreen = () => {
       <ErrorState
         title="Failed to Load Products"
         message="Unable to fetch products. Check your connection and try again."
-        // icon={require('../../assets/images/error.png')}
-        // errorCode="500"
-        // onRetry={() => refetchData()}
         retryLabel="Retry"
       />
     );
@@ -82,7 +75,6 @@ const ProductsScreen = () => {
       <EmptyState
         title="No Products Found"
         message="Try searching with different keywords"
-        // icon={require('../../assets/images/empty-search.png')}
         showIcon={true}
       />
     );

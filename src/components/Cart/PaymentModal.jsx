@@ -1,55 +1,3 @@
-// import React from 'react';
-// import { View, Text, Modal, TouchableOpacity } from 'react-native';
-// import MaterialDesignIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-// import styles from '../../screens/Cart/styles';
-
-// const PaymentModal = ({
-//   visible,
-//   onClose,
-//   finalTotal,
-//   setSelectedPaymentMethod,
-//   setOrderConfirmationVisible,
-// }) => {
-//   const selectMethod = method => {
-//     setSelectedPaymentMethod(method);
-//     onClose();
-//     setOrderConfirmationVisible(true);
-//   };
-
-//   return (
-//     <Modal
-//       transparent={true}
-//       visible={visible}
-//       onRequestClose={onClose}
-//       animationType="slide"
-//     >
-//       <View style={styles.modalOverlay}>
-//         <View style={styles.modalContent}>
-//           <Text>Choose Payment Method</Text>
-
-//           <TouchableOpacity onPress={() => selectMethod('UPI')}>
-//             <Text>UPI</Text>
-//           </TouchableOpacity>
-
-//           <TouchableOpacity onPress={() => selectMethod('Card')}>
-//             <Text>Card</Text>
-//           </TouchableOpacity>
-
-//           <TouchableOpacity onPress={() => selectMethod('COD')}>
-//             <Text>Cash on Delivery</Text>
-//           </TouchableOpacity>
-
-//           <TouchableOpacity onPress={onClose}>
-//             <Text>Cancel</Text>
-//           </TouchableOpacity>
-//         </View>
-//       </View>
-//     </Modal>
-//   );
-// };
-
-// export default PaymentModal;
-
 import React from 'react';
 import { View, Text, Modal, TouchableOpacity, Pressable } from 'react-native';
 import MaterialDesignIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -85,7 +33,7 @@ const PaymentModal = ({
           </View>
 
           <View style={styles.paymentMethodsContainer}>
-            {/* UPI */}
+            {/* UPI
             <TouchableOpacity
               style={styles.paymentMethod}
               onPress={() => {
@@ -110,10 +58,10 @@ const PaymentModal = ({
                 name="chevron-right"
                 style={styles.chevronIcon}
               />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             {/* Card */}
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={styles.paymentMethod}
               onPress={() => {
                 setSelectedPaymentMethod('Card');
@@ -137,7 +85,7 @@ const PaymentModal = ({
                 name="chevron-right"
                 style={styles.chevronIcon}
               />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             {/* COD */}
             <TouchableOpacity

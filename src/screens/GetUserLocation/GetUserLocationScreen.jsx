@@ -90,7 +90,6 @@ export default function GetUserLocationScreen({ navigation }) {
     const result = await checkServiceAvailability(pincode);
     if (result.service_available) {
       navigation.reset({ index: 0, routes: [{ name: 'App' }] });
-      // navigation.replace('GetConsent');
     } else {
       Alert.alert('Service Not Available', result.message);
     }
@@ -109,7 +108,6 @@ export default function GetUserLocationScreen({ navigation }) {
         index: 0,
         routes: [{ name: 'App' }],
       });
-      // navigation.replace('GetConsent');
     } else {
       Alert.alert('Service Not Available', result.message);
     }

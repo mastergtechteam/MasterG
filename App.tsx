@@ -1,19 +1,3 @@
-// import { NavigationContainer } from '@react-navigation/native';
-// import { GestureHandlerRootView } from 'react-native-gesture-handler';
-// import RootNavigator from './src/navigation/RootNavigator';
-// import { ThemeProvider } from './src/context/ThemeContext';
-
-// export default function App() {
-//   return (
-//     <GestureHandlerRootView style={{ flex: 1 }}>
-//       <NavigationContainer>
-//         <ThemeProvider>
-//           <RootNavigator />
-//         </ThemeProvider>
-//       </NavigationContainer>
-//     </GestureHandlerRootView>
-//   );
-// }
 import { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -47,7 +31,12 @@ export default function App() {
           <LanguageProvider>
             <NavigationContainer
               ref={navigationRef}
-              onReady={() => routingInstrumentation.registerNavigationContainer(navigationRef)}>
+              onReady={() =>
+                routingInstrumentation.registerNavigationContainer(
+                  navigationRef,
+                )
+              }
+            >
               <RootNavigator />
             </NavigationContainer>
           </LanguageProvider>

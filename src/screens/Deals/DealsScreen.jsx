@@ -17,6 +17,7 @@ import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 import GoBackHeader from '../../components/common/GoBackHeader';
 import { BASE_URL } from '../../api/apiClient';
+import { getAppType } from '../../config/appConfig';
 const DealsScreen = () => {
   const navigation = useNavigation();
   const [deals, setDeals] = useState([]);
@@ -28,17 +29,16 @@ const DealsScreen = () => {
   const fetchDeals = async () => {
     const TAG = '[API:Deals]';
     const url = `${BASE_URL}/deals`;
-    console.log(TAG, `▶ GET ${url}`);
-    const start = Date.now();
+
     try {
       setLoading(true);
-      const response = await fetch(url);
-      console.log(
-        TAG,
-        `⏱ ${Date.now() - start}ms | status: ${response.status}`,
-      );
+      const response = await fetch(url, {
+        headers: {
+          'X-App-Type': getAppType(),
+        },
+      });
+
       const json = await response.json();
-      console.log(TAG, `✅ ${json?.length ?? 0} deals fetched`);
       setDeals(json);
     } catch (error) {
       console.error(TAG, `❌ Error: ${error.message}`);

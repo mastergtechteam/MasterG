@@ -131,7 +131,7 @@ export default StyleSheet.create({
     marginBottom: spacing.xs,
   },
   billingText: {
-    fontSize: typography.fontSize.sm,
+    fontSize: typography.fontSize.md,
     color: colors.textSecondary,
     marginBottom: spacing.xs,
   },

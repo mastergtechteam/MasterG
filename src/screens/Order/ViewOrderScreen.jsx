@@ -17,6 +17,7 @@ import { useDispatch } from 'react-redux';
 import { clearCart, addToCart } from '../../features/cart/cartSlice';
 import { processReorder } from '../../screens/services/reOrder/reorderService';
 import { getAuthData } from '../../utils/secureStore';
+import { getAppType } from '../../config/appConfig';
 
 const SAMPLE_IMAGE = 'https://via.placeholder.com/100x100.png?text=Product';
 
@@ -49,11 +50,11 @@ const ViewOrderScreen = ({ route, navigation }) => {
       if (!authData?.token) return;
 
       const url = `${BASE_URL}/api/v1/order/${orderId}/status`;
-      console.log('Fetching tracking:', url);
 
       const res = await axios.get(url, {
         headers: {
           Authorization: `Bearer ${authData.token}`,
+          'X-App-Type': getAppType(),
         },
       });
 
@@ -75,15 +76,13 @@ const ViewOrderScreen = ({ route, navigation }) => {
       if (!authData?.token) return;
 
       const url = `${BASE_URL}/api/v1/order/${orderId}`;
-      console.log('Fetching:', url);
 
       const res = await axios.get(url, {
         headers: {
           Authorization: `Bearer ${authData.token}`,
+          'X-App-Type': getAppType(),
         },
       });
-
-      console.log(res.data);
 
       if (res.data.success) {
         setOrderDetails(res.data.data);
@@ -112,15 +111,13 @@ const ViewOrderScreen = ({ route, navigation }) => {
             if (!authData?.token) return;
 
             const url = `${BASE_URL}/api/v1/order/${orderId}`;
-            console.log('Cancelling:', url);
 
             const response = await axios.delete(url, {
               headers: {
                 Authorization: `Bearer ${authData.token}`,
+                'X-App-Type': getAppType(),
               },
             });
-
-            console.log('Cancel Response:', response.data);
 
             if (response.data.success) {
               Alert.alert('Success', 'Order cancelled successfully');
