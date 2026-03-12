@@ -22,8 +22,6 @@ const CartScreen = () => {
     cartItems,
     total,
     finalTotal,
-    taxAmount,
-    SHIPPING_CHARGE,
     DELIVERY_TIME,
     billingAddress,
     ShopName,

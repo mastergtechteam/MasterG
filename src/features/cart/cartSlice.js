@@ -12,12 +12,14 @@ const cartSlice = createSlice({
       const product = action.payload;
       const item = state.items[product.id];
 
+      const qty = product.quantity || 1;
+
       if (item) {
-        item.quantity += 1;
+        item.quantity += qty;
       } else {
         state.items[product.id] = {
           product,
-          quantity: 1,
+          quantity: qty,
         };
       }
     },

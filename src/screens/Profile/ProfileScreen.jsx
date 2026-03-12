@@ -142,7 +142,11 @@ const ProfileScreen = () => {
         {icon && <View style={styles.infoIconBox}>{icon}</View>}
         <AppText style={styles.infoLabel}>{label}</AppText>
       </AppView>
-      <AppText style={styles.infoValue}>{value}</AppText>
+      <AppView style={styles.infoValueContainer}>
+        <AppText style={styles.infoValue} numberOfLines={1}>
+          {value}
+        </AppText>
+      </AppView>
     </AppView>
   );
 
@@ -385,19 +389,12 @@ const ProfileScreen = () => {
                 <InfoItem
                   label="Address Line 1"
                   value={retailer?.address?.line1}
-                  icon={
-                    <MaterialIcons
-                      name="location-on"
-                      size={16}
-                      color={colors.primary}
-                    />
-                  }
                 />
-                <View style={styles.divider} />
-                <InfoItem
+                {/* <View style={styles.divider} /> */}
+                {/* <InfoItem
                   label="Address Line 2"
                   value={retailer?.address?.line2}
-                />
+                /> */}
                 <View style={styles.divider} />
                 <InfoItem label="Area" value={retailer?.address?.area} />
                 <View style={styles.divider} />
@@ -407,28 +404,11 @@ const ProfileScreen = () => {
                 <View style={styles.divider} />
                 <InfoItem label="Pincode" value={retailer?.address?.pincode} />
                 <View style={styles.divider} />
-                <InfoItem
-                  label="Email"
-                  value={retailer?.contact?.email}
-                  icon={
-                    <MaterialIcons
-                      name="email"
-                      size={16}
-                      color={colors.primary}
-                    />
-                  }
-                />
+                <InfoItem label="Email" value={retailer?.contact?.email} />
                 <View style={styles.divider} />
                 <InfoItem
                   label="Alternate Mobile"
                   value={retailer?.contact?.alternateMobile}
-                  icon={
-                    <MaterialIcons
-                      name="phone"
-                      size={16}
-                      color={colors.primary}
-                    />
-                  }
                 />
               </ExpandableSection>
 
@@ -519,9 +499,23 @@ const ProfileScreen = () => {
                     <AppText style={styles.emptyDocumentText}>
                       PAN/GST details not added yet
                     </AppText>
-                    <AppText style={styles.emptyDocumentSubText}>
+                    {/* <AppText style={styles.emptyDocumentSubText}>
                       Tap to add your documents
-                    </AppText>
+                    </AppText> */}
+                    <TouchableOpacity
+                      style={[
+                        styles.editButton,
+                        styles.editBtn,
+                        { marginTop: 20 },
+                      ]}
+                      onPress={() => navigation.navigate('EditProfile')}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons name="add" size={18} color={colors.primary} />
+                      <AppText style={styles.editBtnText}>
+                        Add PAN/GST Details
+                      </AppText>
+                    </TouchableOpacity>
                   </TouchableOpacity>
                 )}
               </ExpandableSection>
@@ -719,15 +713,16 @@ const styles = StyleSheet.create({
   },
   infoItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: spacing.sm,
     paddingVertical: spacing.xs,
+    minHeight: 32,
   },
   infoItemLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
+    width: '40%',
   },
   infoIconBox: {
     width: 32,
@@ -737,19 +732,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.sm,
+    flexShrink: 0,
   },
   infoLabel: {
-    fontSize: 11,
+    fontSize: 14,
     color: colors.textMuted,
-    flex: 1,
     fontWeight: '500',
+    flex: 1,
+  },
+  infoValueContainer: {
+    flex: 1,
+    paddingLeft: spacing.md,
+    justifyContent: 'center',
   },
   infoValue: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '600',
     color: colors.textPrimary,
     textAlign: 'right',
-    flex: 1,
   },
   divider: {
     height: 1,
@@ -897,6 +897,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary + '15',
     borderWidth: 1,
     borderColor: colors.primary,
+    paddingHorizontal: 10,
   },
   editBtnText: {
     fontSize: 13,

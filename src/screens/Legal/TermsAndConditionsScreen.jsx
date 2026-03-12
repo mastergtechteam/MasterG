@@ -9,7 +9,7 @@ export default function TermsAndConditionsScreen() {
     <SafeAreaView edges={['top', 'bottom']} style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000000" />
 
-      <GoBackHeader title="Legal" showSearch={false} />
+      <GoBackHeader title="Terms and Conditions" showSearch={false} />
 
       <WebView source={{ uri: 'https://masterg.ai/' }} style={{ flex: 1 }} />
     </SafeAreaView>

@@ -170,7 +170,12 @@ const ViewOrderScreen = ({ route, navigation }) => {
 
       // 2️⃣ Add safe items
       cartItems.forEach(item => {
-        dispatch(addToCart(item?.product));
+        dispatch(
+          addToCart({
+            ...item.product,
+            quantity: item.quantity,
+          }),
+        );
       });
 
       // 3️⃣ Show unavailable items

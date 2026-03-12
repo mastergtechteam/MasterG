@@ -68,17 +68,27 @@ const SettingsScreen = () => {
   };
 
   const handleReportIssue = () => {
-    Alert.alert(
-      'Report Issue',
-      'Thank you for reporting. We will look into it.',
-    );
+    navigation.navigate('ReportIssue');
+  };
+  const handleFaq = () => {
+    navigation.navigate('FAQ');
+  };
+  const handleContactUs = () => {
+    navigation.navigate('ContactUs');
   };
 
-  const SettingItem = ({ icon, label, onPress, rightElement }) => (
+  const SettingItem = ({
+    icon,
+    label,
+    onPress,
+    rightElement,
+    disabled = false,
+  }) => (
     <TouchableOpacity
       style={styles.settingItem}
-      onPress={onPress}
-      activeOpacity={0.7}
+      onPress={disabled ? null : onPress}
+      activeOpacity={disabled ? 1 : 0.7}
+      disabled={disabled}
     >
       <View style={styles.settingLeft}>
         <MaterialCommunityIcons
@@ -89,13 +99,14 @@ const SettingsScreen = () => {
         />
         <AppText style={styles.settingLabel}>{label}</AppText>
       </View>
-      {rightElement || (
-        <MaterialCommunityIcons
-          name="chevron-right"
-          size={24}
-          color={colors.textSecondary}
-        />
-      )}
+      {!disabled &&
+        (rightElement || (
+          <MaterialCommunityIcons
+            name="chevron-right"
+            size={24}
+            color={colors.textSecondary}
+          />
+        ))}
     </TouchableOpacity>
   );
 
@@ -127,15 +138,11 @@ const SettingsScreen = () => {
         <View style={styles.section}>
           <SectionTitle title="HELP & SUPPORT" />
           <View style={styles.sectionContent}>
-            <SettingItem
-              icon="help-circle"
-              label="FAQ"
-              onPress={() => console.log('FAQ')}
-            />
+            <SettingItem icon="help-circle" label="FAQ" onPress={handleFaq} />
             <SettingItem
               icon="chat"
               label="Contact Us"
-              onPress={() => console.log('Contact Us')}
+              onPress={handleContactUs}
             />
             <SettingItem
               icon="bug-report"
@@ -171,11 +178,7 @@ const SettingsScreen = () => {
         <View style={styles.section}>
           <SectionTitle title="ABOUT" />
           <View style={styles.sectionContent}>
-            <SettingItem
-              icon="information"
-              label="About App"
-              onPress={() => console.log('About App')}
-            />
+            <SettingItem icon="information" label="About App" disabled />
             <View style={styles.versionInfo}>
               <AppText color="textSecondary" style={styles.versionText}>
                 Version 1.0.0

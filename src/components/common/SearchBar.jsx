@@ -44,9 +44,7 @@ const SearchBar = ({ onSearch }) => {
     }
 
     debounceRef.current = setTimeout(() => {
-      if (text.trim()) {
-        onSearch(text.trim());
-      }
+      onSearch(text);
     }, 400);
   };
 

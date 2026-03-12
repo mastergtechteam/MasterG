@@ -15,6 +15,9 @@ import SettingsScreen from '../screens/Settings/SettingsScreen';
 import TermsAndConditionsScreen from '../screens/Legal/TermsAndConditionsScreen';
 import PrivacyPolicyScreen from '../screens/Legal/PrivacyPolicyScreen';
 import RefundPolicyScreen from '../screens/Legal/RefundPolicyScreen';
+import FAQScreen from '../screens/Legal/FAQScreen';
+import ContactUsScreen from '../screens/Legal/ContactUsScreen';
+import ReportScreen from '../screens/Legal/ReportScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -79,6 +82,9 @@ export default function AppNavigator() {
       />
       <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
       <Stack.Screen name="RefundPolicy" component={RefundPolicyScreen} />
+      <Stack.Screen name="FAQ" component={FAQScreen} />
+      <Stack.Screen name="ContactUs" component={ContactUsScreen} />
+      <Stack.Screen name="ReportIssue" component={ReportScreen} />
 
       {/* Product Screens */}
       <Stack.Screen name="Products" component={ProductsScreen} />

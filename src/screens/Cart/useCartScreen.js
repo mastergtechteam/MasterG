@@ -51,11 +51,8 @@ export const useCartScreen = () => {
   };
 
   const DELIVERY_TIME = '3-5 business days';
-  const SHIPPING_CHARGE = 50;
-  const TAX_RATE = 0.05;
 
-  const taxAmount = Math.round(total * TAX_RATE);
-  const finalTotal = total + SHIPPING_CHARGE + taxAmount;
+  const finalTotal = total;
 
   // ✅ Profile validation (safe + minimal)
   const isProfileComplete = () => {
@@ -232,8 +229,6 @@ export const useCartScreen = () => {
     cartItems,
     total,
     finalTotal,
-    taxAmount,
-    SHIPPING_CHARGE,
     DELIVERY_TIME,
     billingAddress,
     ShopName,

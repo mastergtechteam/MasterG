@@ -4,12 +4,12 @@ import { WebView } from 'react-native-webview';
 import GoBackHeader from '../../components/common/GoBackHeader';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function PrivacyPolicyScreen() {
+export default function ContactUsScreen() {
   return (
     <SafeAreaView edges={['top', 'bottom']} style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000000" />
 
-      <GoBackHeader title="Privacy Policy" showSearch={false} />
+      <GoBackHeader title="Contact Us" showSearch={false} />
 
       <WebView source={{ uri: 'https://masterg.ai/' }} style={{ flex: 1 }} />
     </SafeAreaView>
