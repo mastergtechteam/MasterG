@@ -1,4 +1,4 @@
-package com.masterg.retail.ai
+package com.masterg.retail.pro.ai
 
 import android.os.Bundle
 import com.facebook.react.ReactActivity

@@ -187,8 +187,7 @@ export default function OtpScreen({ navigation, route }) {
         },
         body: JSON.stringify({
           mobile: mobile,
-          // otp: enteredOtp,
-          otp: 1111,
+          otp: enteredOtp,
           role: 'RETAILER',
         }),
       });
