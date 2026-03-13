@@ -13,6 +13,10 @@ import {
   getFCMToken,
   setupNotificationListeners,
 } from './src/config/notifications';
+import crashlytics from '@react-native-firebase/crashlytics';
+
+// Enable Crashlytics only in production
+crashlytics().setCrashlyticsCollectionEnabled(!__DEV__);
 
 export default function App() {
   useEffect(() => {
