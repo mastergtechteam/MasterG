@@ -206,6 +206,10 @@ const ViewOrderScreen = ({ route, navigation }) => {
 
   const { billing, items, orderStatus, createdAt } = orderDetails;
 
+  const isOrderCancelled = trackingData.some(
+    step => step.status === 'CANCELLED',
+  );
+
   return (
     <AppView style={styles.screen}>
       <GoBackHeader title="Order Details" showSearch={false} />
@@ -336,15 +340,17 @@ const ViewOrderScreen = ({ route, navigation }) => {
         </View>
 
         {/* ACTION BUTTONS */}
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.reorderBtn} onPress={reorder}>
-            <Text style={styles.btnText}>Reorder</Text>
-          </TouchableOpacity>
+        {!isOrderCancelled && (
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity style={styles.reorderBtn} onPress={reorder}>
+              <Text style={styles.btnText}>Reorder</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity style={styles.cancelBtn} onPress={cancelOrder}>
-            <Text style={styles.cancelText}>Cancel Order</Text>
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity style={styles.cancelBtn} onPress={cancelOrder}>
+              <Text style={styles.cancelText}>Cancel Order</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
     </AppView>
   );
